@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os
+
 from pprint import pprint as pp
 import argparse
 
+
 def decode_file_to_bytes(f):
-    # type: file -> bytes or bytearray (really an integer iterable)
+    # type file -> bytes or bytearray (really an integer iterable)
     data = f.read()
     if isinstance(data, str):    # py2 compat
         data = bytearray(data)
     return data
+
 
 def decode_qrs_to_ir(f, offset):
     """Decode a QRS piano roll file to an intermediate representation,
@@ -44,13 +46,47 @@ def decode_qrs_to_ir(f, offset):
             ir.append(["???", byte])
     return ir
 
-def encode_ir_to_midi(ir):
-    raise NotImplementedException
 
-ap = argparse.ArgumentParser()
-ap.add_argument('filename')
-ap.add_argument('--offset', type=int, default=0x40)
-args = ap.parse_args()
+def encode_ir_to_midi(ir, filename):
+    import midi
+    # Instantiate a MIDI Pattern (contains a list of tracks)
+    pattern = midi.Pattern()
+    # Instantiate a MIDI Track (contains a list of MIDI events)
+    track = midi.Track()
+    # Append the track to the pattern
+    pattern.append(track)
 
-with open(args.filename, "rb") as f:
-    pp(decode_qrs_to_ir(f, args.offset))
+    tick = 0
+    velocity = 70
+    
+    for inst in ir:
+        op, val = inst
+        if op == 'wait':
+            tick = val * 15   # about 15 for my stuff, about 25 for theirs
+        elif op == 'on':
+            track.append(midi.NoteOnEvent(tick=tick, velocity=velocity, pitch=val))
+            tick = 0
+        elif op == 'off':
+            track.append(midi.NoteOffEvent(tick=tick, pitch=val))
+            tick = 0
+                         
+    track.append(midi.EndOfTrackEvent(tick=tick))
+
+    # Save the pattern to disk
+    midi.write_midifile(filename, pattern)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('filename')
+    ap.add_argument('--offset', type=int, default=0x40)
+    args = ap.parse_args()
+
+    with open(args.filename, "rb") as f:
+        ir = decode_qrs_to_ir(f, args.offset)
+        # pp(ir)
+        encode_ir_to_midi(ir, args.filename + '.mid')
+
+
+if __name__ == '__main__':
+    main()

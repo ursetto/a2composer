@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+# Run applecommander and convert non-empty stderr to rc=1.
+
+import subprocess
+import sys
+
+cmd = ["applecommander"] + sys.argv[1:]
+
+pipes = subprocess.Popen(cmd, stdout=sys.stdout, stderr=subprocess.PIPE)
+stdout, stderr = pipes.communicate()
+
+if stderr:
+    print("Stderr: ", stderr)
+    sys.stderr.write(stderr.decode('utf-8'))
+    sys.exit(1)

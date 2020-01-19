@@ -4,11 +4,6 @@ from shlex import quote as q
 def qq(*L): return " ".join(map(q, L))   # shlex.join, py>=3.8
 def j(*L): return " ".join(L)
 
-# invoke has a lot of things I look for in make as a task runner: echoing of
-# commands, dry run, shell syntax, running tasks by name, task dependencies
-# (though not file). It lacks the ability to pass a list to run() (issue open 
-# since 2012) so we must annoyingly quote args.  Maintenance is iffy.
-
 # A major problem with applecommander is that it returns 0 on error.
 # Currently, we run a wrapper for it which converts non-empty stderr to rc=1.
 

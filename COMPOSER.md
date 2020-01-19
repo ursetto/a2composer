@@ -75,6 +75,10 @@ were saved with some data from $5000-$503F; I can't tell if this is just BASIC f
 data that overlapped the music file, other corruption, or whether the driver modified 
 it while playing.
 
+### Title
+
+All songs playable by the official player begin with `^`. It appears the second character has meaning, perhaps the tempo. The driver always does a 'BLOAD ^' followed by the rest of the filename.
+
 ### Data
 
 Official files start data with FF 0F. My files start with either FF 0F, FF 0A, FF 0F 00 (?), or FF 0A 00 depending
@@ -149,8 +153,36 @@ COMPOSER4 actually writes 00 00 00 to the end of file location in memory at star
 MIDI conversion
 ---------------
 
+qrs2midi.py
+
+Driver disassembly
+------------------
+
+zp $09 : points to current filename (apparently, the character after the first ^).
+    the first byte is also stored in the SSC_STATUS register (?!)
+zp $0B : seems to be a boolean: 0 if no song playing, $FF if playing (test is for 0)
+$303 : whatever's here, it's multiplied by 32 and stored in $09. The currently playing
+       song, I think.
+14ac : a CR-terminated string. may be populated near EOF in the bad sectors.
+       Surmising this is "DEMO DISK FOR MIDI MAGIC" obtained by scanning catalog for
+       file beginning with "@".
+14cc-15cc : a 256-byte (table) containing 8 (?) 32-byte (?) entries.
+            Somewhere in here is the current filename.
+            This might be a list of all songs on disk.
 
 
+### Recovery of MIDI-MAGIC
+
+The last 3 sectors of MIDI-MAGIC are on T04,S0D-0F are corrupt as
+track 4 is unreadable. Unfortunately there are no copies of this data elsewhere.
+
+    T22,S08 is "unused" but contains a copy of $0AEF-$0B2C of MIDI-MAGIC.
+    T16,S00-03 contains deleted or missing COMPOSER stuff
+    T16,S04-0D contains valid assembly of an unknown executable, not the driver
+    T14,S00-02 contains garbage (?) data
+    T13,S03-09 contains deleted for missing COMPOSER stuff
+    T08,S06-0A contains deleted for missing COMPOSER stuff (probably COMPOSER2)
+    T04 appears destroyed. It contained MIDI-MAGIC and LOGO data.
 
 Further information
 -------------------
@@ -172,3 +204,4 @@ I also found the following at https://homepages.abdn.ac.uk/d.j.benson/pages/html
     MIDI Magic Digital Disks
 
     Digital music disks from the 10,000 song QRS piano roll library of past and present music. Available for Yamaha and the MIDI DJ sequencer as well as Atari ST, Apple IIC, II+, IIE, Laser 128, Commodore 64/128, PC XT and other popular computers and sequencers. Retail $19.95 (6 song disk), $29.95 (10 song disk). (1988 prices).
+

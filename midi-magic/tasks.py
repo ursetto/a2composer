@@ -27,8 +27,8 @@ def commit(c):
 def pull(c):
     print("Pulling from disk image...")
     for fn in fns:
-        dst = prefix + '/' + fn
-        c.run(f"./ac -e {q(disk)} {q(dst)} > {q(fn)}")
+        src = prefix + '/' + fn
+        c.run(f"./ac -e {q(disk)} {q(src)} > {q(fn)}")
         #c.run("./ac -e " + qq(disk, prefix + '/' + fn) + " > " + q(fn))
         #c.run(j("./ac", "-e", qq(disk, prefix + '/' + fn), ">", q(fn)))
         #c.run("./ac -e {disk} {src} > {dst}".format(

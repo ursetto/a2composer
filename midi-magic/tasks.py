@@ -49,9 +49,13 @@ def push(c):
     print("Pushing to disk image...")
     for fn in fns:
         dst = prefix + '/' + fn
-        # c.run(f"./ac -pt {q(disk)} {q(dst)} {q(fn)}")
-        # c.run("./ac -pt " + qq(disk, dst, fn))
-        # c.run(f"./ac -pt {qq(disk, dst, fn)}")
-        c.run(qq("./ac", "-pt", disk, dst, fn))
+        if fn.endswith('.t'):
+            print("Skipping template file")
+            pass
+        else:
+            # c.run(f"./ac -pt {q(disk)} {q(dst)} {q(fn)}")
+            # c.run("./ac -pt " + qq(disk, dst, fn))
+            # c.run(f"./ac -pt {qq(disk, dst, fn)}")
+            c.run(qq("./ac", "-pt", disk, dst, fn))
 
 

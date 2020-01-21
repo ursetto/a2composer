@@ -32,7 +32,13 @@ def pull(c):
     print("Pulling from disk image...")
     for fn in fns:
         src = prefix + '/' + fn
-        c.run(f"./ac -e {q(disk)} {q(src)} > {q(fn)}")
+        if fn.endswith('.t'):
+            c.run(f"./ac -g {q(disk)} {q(src)} > {q(fn)}")
+            # template files can be read by clearing high-bit, but it does not
+            # work in the other direction
+        else:
+            c.run(f"./ac -e {q(disk)} {q(src)} > {q(fn)}")
+
         #c.run("./ac -e " + qq(disk, prefix + '/' + fn) + " > " + q(fn))
         #c.run(j("./ac", "-e", qq(disk, prefix + '/' + fn), ">", q(fn)))
         #c.run("./ac -e {disk} {src} > {dst}".format(

@@ -48,6 +48,8 @@ def pull(c):
 def push(c):
     # Note: pushing is currently pointless. TFBD does not use the .S files, only
     # the .T file, and we cannot decode/encode the .T file to change it.
+    # .T file is type $5E, auxtype $8002 (in other words:
+    #    cadius replacefile ../../../../System\ 6_0_4\ jim.hdv /gsharddrive/tfbd/asm MX.T\#5E8002
     print("Pushing to disk image...")
     for fn in fns:
         dst = prefix + '/' + fn

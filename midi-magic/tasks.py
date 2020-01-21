@@ -9,7 +9,11 @@ def j(*L): return " ".join(L)
 
 disk = "../../../System 6_0_4 jim.hdv"
 prefix = "TFBD/ASM"
-fns = ['midi.magic.s', 'midi.magic.e.s', 'midi.magic.x.s']
+filename = 'midi.magic'
+
+fns = []
+for ext in '.s', '.e.s', '.x.s', '.t':
+    fns.append(filename + ext)
 
 @task
 def precheck(c):

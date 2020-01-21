@@ -46,6 +46,8 @@ def pull(c):
 
 @task
 def push(c):
+    # Note: pushing is currently pointless. TFBD does not use the .S files, only
+    # the .T file, and we cannot decode/encode the .T file to change it.
     print("Pushing to disk image...")
     for fn in fns:
         dst = prefix + '/' + fn

@@ -1,0 +1,131 @@
+# TFBD (127 records total)
+# 2x section (48 records)
+ASC +$0044, $01
+ASC +$0045, $14
+ASC +$0062, $0C
+ASC +$008F, $27
+ASC +$00B6, $27
+ASC +$00DD, $1F
+ASC +$0672, $27
+ASC +$0699, $27
+ASC +$06C0, $27
+ASC +$06E7, $27
+ASC +$070E, $27
+ASC +$0735, $27
+ASC +$075C, $27
+ASC +$0783, $27
+ASC +$07AA, $27
+ASC +$07D1, $27
+ASC +$07F8, $27
+ASC +$081F, $27
+ASC +$0846, $14
+ASC +$08AD, $09
+ASC +$08B6, $01
+ASC +$08B7, $0A
+ASC +$08C1, $09
+ASC +$08CA, $03
+ASC +$08CD, $07
+ASC +$08D4, $03
+ASC +$0390, $27
+ASC +$03B7, $1D
+ASC +$03FC, $06
+ASC +$0411, $06
+ASC +$0428, $27
+ASC +$044F, $27
+ASC +$0476, $15
+ASC +$048B, $03
+ASC +$04BB, $27
+ASC +$04E2, $27
+ASC +$0509, $27
+ASC +$0530, $27
+ASC +$0557, $27
+ASC +$057E, $27
+ASC +$05A5, $27
+ASC +$05CC, $0E
+ASC +$05F7, $1A
+ASC +$0160, $0C
+DA  +$0148, $18
+ASC +$0BD6, $03
+ASC +$0BB9, $18
+ASC +$0BE4, $03
+# 4x section (46 records)
+LAB +$085D, OUTPUT         # 0001
+LAB +$002C, START         # 0002
+LAB +$0160, CHOICES         # 000C
+LAB +$0148, RTSTBL         # 0002
+EQU  $C0A8, SSC_TDREG
+EQU  $C0AA, SSC_COMMAND
+EQU  $C0AB, SSC_CONTROL
+EQU  $C0A9, SSC_STATUS
+EQU  $0000, SONGPTR
+EQU  $4038, TEMPO
+LAB +$0224, :ADD20         # 0002
+LAB +$021C, CURSONGIDX         # 0002
+LAB +$0CCC, FILETBL         # 0002
+LAB +$0BF6, INITnDIE         # 0002
+LAB +$0031, :ZEROTABLES         # 0002
+LAB +$08AD, :STRS         # 0009
+LAB +$089B, BLOADCMD         # 0003
+LAB +$048F, PRFILNAM         # 0003
+EQU  $0009, FILENAME
+LAB +$04A5, :x32         # 0002
+LAB +$049D, LOADFILE         # 0002
+LAB +$04AA, :x32END         # 0001
+LAB +$0080, TXTTITLE         # 0003
+LAB +$0073, :WAIT         # 0003
+LAB +$0338, SUMDELAY         # 0001
+LAB +$033A, :inner         # 0002
+LAB +$0339, :outer         # 0001
+LAB +$0374, :WAITKEY         # 0003
+LAB +$03DB, PRINTDISK         # 0003
+LAB +$049C, :end         # 0001
+EQU  $030A, SONGCNT
+LAB +$0422, MENU         # 0003
+LAB +$0616, ABC         # 0001
+LAB +$0134, :FOUND         # 0001
+LAB +$012A, :NEXT         # 0003
+LAB +$0118, SELECT         # 0003
+LAB +$0135, PLAYSEL         # 0001
+LAB +$00FF, MAINLOOP         # 0002
+EQU  $0303, CURSONG
+LAB +$0371, GETKEY         # 0003
+LAB +$05EC, PRESSANYKEY         # 0002
+LAB +$0229, :DONE         # 0001
+LAB +$0384, MAINMENU         # 0003
+LAB +$03F3, PRINTSONG         # 0001
+LAB +$0617, NEXTSONGP         # 0003
+LAB +$061F, NEXTSONG         # 0003
+# 6x section (33 records)
+ORG +$0000, $0800, L$0E00
+MX  +$0000, %11
+MX  +$0805, %11
+MX  +$0859, %11
+COM +$0191, 115200 8N1        # 00E06F64
+COM +$0198, SONGPTR        # 00E07C34
+COM +$021C, Y=$303*32        # 00E078EC
+COM +$0BFC, BAD SECTORS TO END        # 00E07068
+COM +$0CCC, MAYBE 32 BYTE ENTRIES        # 00E06E4C
+COM +$0033, OVERLAP        # 00E07888
+COM +$0CAC, 14AC-15CC ZEROED AT STARTUP        # 00E0789C
+COM +$0076, keypress ends logo        # 00E06C6C
+COM +$0338, loop x+(x-1)+...+1 times        # 00E06EEC
+COM +$0374, WAIT FOR KEYPRESS        # 00E07A40
+COM +$0409, int->digit        # 00E07478
+COM +$0137, get corresponding        # 00E06AC8
+COM +$013A, addr in RTSTBL        # 00E079DC
+COM +$013F, push addr on stack        # 00E06CF8
+COM +$0147, jump to selection        # 00E07D24
+COM +$012A, find index of char        # 00E07338
+COM +$012D, in CHOICES array        # 00E07324
+COM +$0132, nope        # 00E06A28
+COM +$011E, A=user's selection        # 00E074A0
+COM +$00FF, $0b=current song or 0        # 00E07568
+COM +$04AD, LOADING:         # 00E075B8
+COM +$05E6, ",A$4000"        # 00E06CA8
+COM +$05DA, "NOMONIOC:BLOAD ^"        # 00E07310
+COM +$05E1, FILENAME        # 00E072FC
+COM +$04AB, IDX INTO FILETBL        # 00E06C08
+COM +$04AA, CURSONG*32        # 00E06B7C
+COM +$022E, filename byte 0        # 00E06B18
+COM +$0231, lower 7 bits        # 00E06B04
+COM +$0233, are the tempo        # 00E06B40

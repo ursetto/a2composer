@@ -82,8 +82,10 @@ def decode_6x(f):
 
         if rtype == 0x66:
             assert count == 1
-            # ARG resembles a IIGS slow ram addr E0/XXXX here.
-            print(f"COM +${offset:04X}, {var_data}        # {arg:08X}")
+            # ARG resembles a IIGS slow ram addr E0/XXXX here. I suspect it
+            # is a pointer to live memory and will be ignored -- it is
+            # randomly updated after a save/load cycle.
+            print(f"COM +${offset:04X}, {var_data}")  # # {arg:08X}")
         elif rtype == 0x61:
             assert count == 1
             assert var_len == 0

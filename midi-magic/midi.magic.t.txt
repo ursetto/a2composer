@@ -1,4 +1,4 @@
-# TFBD (129 records total)
+# TFBD (132 records total)
 # 2x section (48 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -48,7 +48,7 @@ DA  +$0148, $18
 ASC +$0BD6, $03
 ASC +$0BB9, $18
 ASC +$0BE4, $03
-# 4x section (47 records)
+# 4x section (49 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -96,7 +96,9 @@ LAB +$03F3, PRINTSONG         # 0001
 LAB +$0617, NEXTSONGP         # 0003
 LAB +$061F, NEXTSONG         # 0003
 EQU  $03EA, RECONNECTIO
-# 6x section (34 records)
+EQU  $000B, ISPLAYING
+LAB +$0CAC, DISKNAME         # 0002
+# 6x section (35 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -120,7 +122,7 @@ COM +$012A, find index of char
 COM +$012D, in CHOICES array
 COM +$0132, nope
 COM +$011E, A=user's selection
-COM +$00FF, $0b=current song or 0
+COM +$00FF, ISPLAYING
 COM +$04AD, LOADING: 
 COM +$05E6, ",A$4000"
 COM +$05DA, "NOMONIOC:BLOAD ^"
@@ -131,3 +133,4 @@ COM +$022E, filename byte 0
 COM +$0231, lower 7 bits
 COM +$0233, are the tempo
 COM +$0012,  CONNECT DOS KBD/SCRN INTERCEPT
+COM +$0110, ISPLAYING

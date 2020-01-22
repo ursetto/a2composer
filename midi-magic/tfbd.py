@@ -2,7 +2,6 @@
 
 import argparse
 import struct
-import sys
 
 
 def read_unpack(f, fmt):
@@ -19,9 +18,9 @@ def decode(args):
         (record_count, ) = read_unpack(f, '<H')
         print(f'# TFBD ({record_count} records total)')
         
-        section_2x = decode_2x(f)
-        section_4x = decode_4x(f)
-        section_6x = decode_6x(f)
+        decode_2x(f)
+        decode_4x(f)
+        decode_6x(f)
 
 
 def decode_2x(f):
@@ -95,8 +94,6 @@ def decode_6x(f):
             print(f"ORG +${offset:04X}, ${arg:04X}, L${count:04X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {offset:08X} {count:08X} {arg:08X} {var_data}")
-            
-
 
 
 def parse_args():

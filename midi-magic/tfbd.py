@@ -2,6 +2,7 @@
 
 import argparse
 import struct
+import sys
 
 
 def read_unpack(f, fmt):
@@ -16,7 +17,7 @@ def apple_to_ascii(a2str):
 def decode(args):
     with open(args.filename, 'rb') as f:
         (record_count, ) = read_unpack(f, '<H')
-        print(f'# Total {record_count} records')
+        print(f'# TFBD ({record_count} records total)')
         
         section_2x = decode_2x(f)
         section_4x = decode_4x(f)
@@ -32,10 +33,10 @@ def decode_2x(f):
         assert (rtype & 0xf0) == 0x20
         if rtype == 0x29:
             assert var_len == 0
-            print(f"ASC ORG+${offset:04X}, ${area_len:02X}")
+            print(f"ASC +${offset:04X}, ${area_len:02X}")
         elif rtype == 0x23:
             assert var_len == 0
-            print(f"DA  ORG+${offset:04X}, ${area_len:02X}")
+            print(f"DA  +${offset:04X}, ${area_len:02X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {offset:08X} {area_len:04X}")
 
@@ -56,10 +57,10 @@ def decode_4x(f):
     
         if rtype == 0x44:
             assert count == 1
-            print(f"EQU ${address:04X}, {var_data}")
+            print(f"EQU  ${address:04X}, {var_data}")
         elif rtype == 0x40:
             # No idea what count field does. Seen 1, 2, 3, 9, $c.
-            print(f"LAB ORG+${address:04X}, {var_data}         # {count:04X}")
+            print(f"LAB +${address:04X}, {var_data}         # {count:04X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {address:08X} {count:04X} {var_data}")
 
@@ -82,11 +83,11 @@ def decode_6x(f):
         if rtype == 0x66:
             assert count == 1
             # ARG resembles a IIGS slow ram addr E0/XXXX here.
-            print(f"COM ORG+${offset:04X}, {var_data}        # {arg:08X}")
+            print(f"COM +${offset:04X}, {var_data}        # {arg:08X}")
         elif rtype == 0x61:
             assert count == 1
             assert var_len == 0
-            print(f"MX ORG+${offset:04X}, %{arg:02X}")
+            print(f"MX  +${offset:04X}, %{arg:02X}")
         elif rtype == 0x60:
             assert var_len == 0
             print(f"ORG +${offset:04X}, ${arg:04X}, L${count:04X}")

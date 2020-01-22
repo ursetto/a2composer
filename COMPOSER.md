@@ -158,10 +158,10 @@ qrs2midi.py
 Driver disassembly
 ------------------
 
-zp $09 : points to current filename (apparently, the character after the first ^).
+zp $09 : FILENAME points to current filename (apparently, the character after the first ^). CURSONG*32.
     the first byte is also stored in the SSC_STATUS register (?!)
-zp $0B : seems to be a boolean: 0 if no song playing, $FF if playing (test is for 0)
-$303 : whatever's here, it's multiplied by 32 and stored in $09. The currently playing
+zp $0B : ISPLAYING bool: 0 if no song playing, $FF if playing (test is for 0)
+$303 : CURSONG whatever's here, it's multiplied by 32 and stored in $09. The currently playing
        song, I think.
 14ac : a CR-terminated string. may be populated near EOF in the bad sectors.
        Surmising this is "DEMO DISK FOR MIDI MAGIC" obtained by scanning catalog for

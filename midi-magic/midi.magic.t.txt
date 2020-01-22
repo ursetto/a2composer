@@ -100,32 +100,32 @@ ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
 MX  +$0859, %11
-COM +$0191, 115200 8N1        # 00E06F64
-COM +$0198, SONGPTR        # 00E07C34
-COM +$021C, Y=$303*32        # 00E078EC
-COM +$0BFC, BAD SECTORS TO END        # 00E07068
-COM +$0CCC, MAYBE 32 BYTE ENTRIES        # 00E06E4C
-COM +$0033, OVERLAP        # 00E07888
-COM +$0CAC, 14AC-15CC ZEROED AT STARTUP        # 00E0789C
-COM +$0076, keypress ends logo        # 00E06C6C
-COM +$0338, loop x+(x-1)+...+1 times        # 00E06EEC
-COM +$0374, WAIT FOR KEYPRESS        # 00E07A40
-COM +$0409, int->digit        # 00E07478
-COM +$0137, get corresponding        # 00E06AC8
-COM +$013A, addr in RTSTBL        # 00E079DC
-COM +$013F, push addr on stack        # 00E06CF8
-COM +$0147, jump to selection        # 00E07D24
-COM +$012A, find index of char        # 00E07338
-COM +$012D, in CHOICES array        # 00E07324
-COM +$0132, nope        # 00E06A28
-COM +$011E, A=user's selection        # 00E074A0
-COM +$00FF, $0b=current song or 0        # 00E07568
-COM +$04AD, LOADING:         # 00E075B8
-COM +$05E6, ",A$4000"        # 00E06CA8
-COM +$05DA, "NOMONIOC:BLOAD ^"        # 00E07310
-COM +$05E1, FILENAME        # 00E072FC
-COM +$04AB, IDX INTO FILETBL        # 00E06C08
-COM +$04AA, CURSONG*32        # 00E06B7C
-COM +$022E, filename byte 0        # 00E06B18
-COM +$0231, lower 7 bits        # 00E06B04
-COM +$0233, are the tempo        # 00E06B40
+COM +$0191, 115200 8N1
+COM +$0198, SONGPTR
+COM +$021C, Y=$303*32
+COM +$0BFC, BAD SECTORS TO END
+COM +$0CCC, MAYBE 32 BYTE ENTRIES
+COM +$0033, OVERLAP
+COM +$0CAC, 14AC-15CC ZEROED AT STARTUP
+COM +$0076, keypress ends logo
+COM +$0338, loop x+(x-1)+...+1 times
+COM +$0374, WAIT FOR KEYPRESS
+COM +$0409, int->digit
+COM +$0137, get corresponding
+COM +$013A, addr in RTSTBL
+COM +$013F, push addr on stack
+COM +$0147, jump to selection
+COM +$012A, find index of char
+COM +$012D, in CHOICES array
+COM +$0132, nope
+COM +$011E, A=user's selection
+COM +$00FF, $0b=current song or 0
+COM +$04AD, LOADING: 
+COM +$05E6, ",A$4000"
+COM +$05DA, "NOMONIOC:BLOAD ^"
+COM +$05E1, FILENAME
+COM +$04AB, IDX INTO FILETBL
+COM +$04AA, CURSONG*32
+COM +$022E, filename byte 0
+COM +$0231, lower 7 bits
+COM +$0233, are the tempo

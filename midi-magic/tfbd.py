@@ -32,12 +32,12 @@ def decode_2x(f):
         assert (rtype & 0xf0) == 0x20
         if rtype == 0x29:
             assert var_len == 0
-            print(f"ASC ORG+${offset:04x}, ${area_len:02x}")
+            print(f"ASC ORG+${offset:04X}, ${area_len:02X}")
         elif rtype == 0x23:
             assert var_len == 0
-            print(f"DA  ORG+${offset:04x}, ${area_len:02x}")
+            print(f"DA  ORG+${offset:04X}, ${area_len:02X}")
         else:
-            print(f"{rtype:02x} {var_len:02x} {offset:08x} {area_len:04x}")
+            print(f"{rtype:02X} {var_len:02X} {offset:08X} {area_len:04X}")
 
 
 def decode_4x(f):
@@ -56,12 +56,12 @@ def decode_4x(f):
     
         if rtype == 0x44:
             assert count == 1
-            print(f"EQU ${address:04x}, {var_data}")
+            print(f"EQU ${address:04X}, {var_data}")
         elif rtype == 0x40:
             # No idea what count field does. Seen 1, 2, 3, 9, $c.
-            print(f"LAB ORG+${address:04x}, {var_data}         # {count:04x}")
+            print(f"LAB ORG+${address:04X}, {var_data}         # {count:04X}")
         else:
-            print(f"{rtype:02x} {var_len:02x} {address:08x} {count:04x} {var_data}")
+            print(f"{rtype:02X} {var_len:02X} {address:08X} {count:04X} {var_data}")
 
 
 def decode_6x(f):
@@ -82,18 +82,16 @@ def decode_6x(f):
         if rtype == 0x66:
             assert count == 1
             # ARG resembles a IIGS slow ram addr E0/XXXX here.
-            print(f"COM ORG+${offset:04x}, {var_data}        # {arg:08x}")
+            print(f"COM ORG+${offset:04X}, {var_data}        # {arg:08X}")
         elif rtype == 0x61:
             assert count == 1
             assert var_len == 0
-            print(f"MX ORG+${offset:04X}, %{arg:02x}")
+            print(f"MX ORG+${offset:04X}, %{arg:02X}")
         elif rtype == 0x60:
             assert var_len == 0
-            print(f"ORG +${offset:04x}, ${arg:04x}, L${count:04x}")
-
-            
+            print(f"ORG +${offset:04X}, ${arg:04X}, L${count:04X}")
         else:
-            print(f"{rtype:02x} {var_len:02x} {offset:08x} {count:08x} {arg:08x} {var_data}")
+            print(f"{rtype:02X} {var_len:02X} {offset:08X} {count:08X} {arg:08X} {var_data}")
             
 
 

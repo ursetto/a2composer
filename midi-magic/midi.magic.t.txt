@@ -49,7 +49,7 @@ ASC +$0BD6, $03
 ASC +$0BB9, $18
 ASC +$0BE4, $03
 # 4x section (47 records)
-LAB +$085D, OUTPUT         # 0001
+LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
 LAB +$0148, RTSTBL         # 0002

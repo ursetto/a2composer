@@ -8,6 +8,11 @@ def read_unpack(f, fmt):
     return struct.unpack(fmt, f.read(struct.calcsize(fmt)))
         
 
+def apple_to_ascii(a2str):
+    bytestr = bytes(map(lambda x: x & 0x7f, a2str))
+    return bytestr.decode('ascii')
+
+
 def decode(args):
     with open(args.filename, 'rb') as f:
         (record_count, ) = read_unpack(f, '<H')
@@ -39,24 +44,58 @@ def decode_4x(f):
     # TODO: Properly compute ORG offset
     (section_count, ) = read_unpack(f, "<H")
     print(f"# 4x section ({section_count} records)")
-    
+
     for i in range(section_count):
         (rtype, var_len, address, count) = read_unpack(f, "<BBIH")
         var_data = b''
         assert (rtype & 0xf0) == 0x40
-        if var_len != 0:
+        if var_len != 0:   # FIXME: abstract this
             assert var_len == read_unpack(f, "<B")[0]
             (var_data, ) = struct.unpack(f'{var_len}s', f.read(var_len))
-            var_data = bytes(map(lambda x: x & 0x7f, var_data))
-            var_data = var_data.decode('ascii')
+            var_data = apple_to_ascii(var_data)
+    
         if rtype == 0x44:
+            assert count == 1
             print(f"EQU ${address:04x}, {var_data}")
+        elif rtype == 0x40:
+            # No idea what count field does. Seen 1, 2, 3, 9, $c.
+            print(f"LAB ORG+${address:04x}, {var_data}         # {count:04x}")
         else:
             print(f"{rtype:02x} {var_len:02x} {address:08x} {count:04x} {var_data}")
 
 
 def decode_6x(f):
-    pass
+    (section_count, ) = read_unpack(f, "<H")
+    print(f"# 6x section ({section_count} records)")
+
+    for i in range(section_count):
+        # Don't know what count is nor if it's an int or 2 shorts.
+        # Don't know what ARG is.
+        (rtype, var_len, offset, count, arg) = read_unpack(f, "<BBIII")
+        var_data = b''
+        assert (rtype & 0xf0) == 0x60
+        if var_len != 0:   # FIXME: abstract this
+            assert var_len == read_unpack(f, "<B")[0]
+            (var_data, ) = struct.unpack(f'{var_len}s', f.read(var_len))
+            var_data = apple_to_ascii(var_data)
+
+        if rtype == 0x66:
+            assert count == 1
+            # ARG resembles a IIGS slow ram addr E0/XXXX here.
+            print(f"COM ORG+${offset:04x}, {var_data}        # {arg:08x}")
+        elif rtype == 0x61:
+            assert count == 1
+            assert var_len == 0
+            print(f"MX ORG+${offset:04X}, %{arg:02x}")
+        elif rtype == 0x60:
+            assert var_len == 0
+            print(f"ORG +${offset:04x}, ${arg:04x}, L${count:04x}")
+
+            
+        else:
+            print(f"{rtype:02x} {var_len:02x} {offset:08x} {count:08x} {arg:08x} {var_data}")
+            
+
 
 
 def parse_args():

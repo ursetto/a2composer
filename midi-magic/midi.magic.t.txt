@@ -48,8 +48,8 @@ DA  +$0148, $18
 ASC +$0BD6, $03
 ASC +$0BB9, $18
 ASC +$0BE4, $03
-20 00 00000A36 00C0
-20 00 00000AF6 00C0
+DB  +$0A36, $C0
+DB  +$0AF6, $C0
 # 4x section (64 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002

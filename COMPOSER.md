@@ -157,18 +157,29 @@ qrs2midi.py
 
 Driver disassembly
 ------------------
-
+zp $00 : SONGPTR -- points to current byte in song
 zp $09 : FILENAME points to current filename (apparently, the character after the first ^). CURSONG*32.
     the first byte is also stored in the SSC_STATUS register (?!)
 zp $0B : ISPLAYING bool: 0 if no song playing, $FF if playing (test is for 0)
-$303 : CURSONG whatever's here, it's multiplied by 32 and stored in $09. The currently playing
-       song, I think.
+$303 : CURSONG whatever's here, it's multiplied by 32 and stored in $09. The currently playing song, I think.
+$305 : seems to hold the last key pressed, set to 0 when key is handled.
+1236.12F5 ($C0) : low byte of HGR line index (lines 0-191)
+12F6.13B5 ($C0) : hi  byte of HGR line index (lines 0-191)
 14ac : a CR-terminated string. may be populated near EOF in the bad sectors.
        Surmising this is "DEMO DISK FOR MIDI MAGIC" obtained by scanning catalog for
        file beginning with "@".
 14cc-15cc : a 256-byte (table) containing 8 (?) 32-byte (?) entries.
             Somewhere in here is the current filename.
             This might be a list of all songs on disk.
+
+0305 : might hold last key pressed.
+
+
+750-777, 7d0-7f7 : The last two lines of the screen, appear to be
+animated with '*' or '.' in each column in some way. Initialized to all '.'.
+Probably simulates a piano roll. See $0AB5 (ANIMATE) which oddly has no call to it.
+
+Tempo can range from 32 to 159 (at least, as input through arrow keys).
 
 
 ### Recovery of MIDI-MAGIC

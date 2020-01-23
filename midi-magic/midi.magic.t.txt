@@ -1,5 +1,5 @@
-# TFBD (132 records total)
-# 2x section (48 records)
+# TFBD (168 records total)
+# 2x section (50 records)
 ASC +$0044, $01
 ASC +$0045, $14
 ASC +$0062, $0C
@@ -48,7 +48,9 @@ DA  +$0148, $18
 ASC +$0BD6, $03
 ASC +$0BB9, $18
 ASC +$0BE4, $03
-# 4x section (49 records)
+20 00 00000A36 00C0
+20 00 00000AF6 00C0
+# 4x section (64 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -98,7 +100,22 @@ LAB +$061F, NEXTSONG         # 0003
 EQU  $03EA, RECONNECTIO
 EQU  $000B, ISPLAYING
 LAB +$0CAC, DISKNAME         # 0002
-# 6x section (35 records)
+LAB +$02B5, ANIMATE         # 0003
+LAB +$032D, NEXTSONGBYTE         # 0002
+LAB +$0248, :next         # 0002
+LAB +$024F, :nokey         # 0003
+LAB +$01DF, DECTEMPO         # 0003
+LAB +$01D9, :ret         # 0002
+LAB +$01EC, :ret         # 0002
+EQU  $0305, LASTKEY
+LAB +$01F2, UPDATETEMPO         # 0003
+LAB +$01CC, INCTEMPO         # 0003
+LAB +$01C6, ]1         # 0002
+LAB +$0A36, HGRLO         # 00C0
+LAB +$0AF6, HGRHI         # 00C0
+LAB +$01B5, CLRLINE         # 0003
+LAB +$01AA, CLRBOTTOM         # 0002
+# 6x section (54 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -134,3 +151,22 @@ COM +$0231, lower 7 bits
 COM +$0233, are the tempo
 COM +$0012,  CONNECT DOS KBD/SCRN INTERCEPT
 COM +$0110, ISPLAYING
+COM +$0174, FILL 750-777 W/$AE
+COM +$0177, FILL 7D0-7F7 W/$AE
+COM +$02D5, 23RD TEXT LINE
+COM +$02DA, 24TH TEXT LINE
+COM +$02C2, '.'
+COM +$02D0, '*'
+COM +$023E, save last keypress?
+COM +$032D, A=($00++)
+COM +$032F, Read next song byte
+COM +$0331, and inc songptr
+COM +$0241, right arrow key
+COM +$0248, left arrow key
+COM +$01E2, min tempo 32
+COM +$01CF, max tempo 159
+COM +$01C2, 40 bytes / HGR line
+COM +$0A36, looks like an HGR
+COM +$0A38, address index table
+COM +$01B5, Y=hgr line # to clr
+COM +$01AA, clr last 2 HGR lines

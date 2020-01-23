@@ -1,5 +1,5 @@
-# TFBD (168 records total)
-# 2x section (50 records)
+# TFBD (189 records total)
+# 2x section (51 records)
 ASC +$0044, $01
 ASC +$0045, $14
 ASC +$0062, $0C
@@ -50,7 +50,8 @@ ASC +$0BB9, $18
 ASC +$0BE4, $03
 DB  +$0A36, $C0
 DB  +$0AF6, $C0
-# 4x section (64 records)
+DB  +$0913, $01
+# 4x section (72 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -115,7 +116,15 @@ LAB +$0A36, HGRLO         # 00C0
 LAB +$0AF6, HGRHI         # 00C0
 LAB +$01B5, CLRLINE         # 0003
 LAB +$01AA, CLRBOTTOM         # 0002
-# 6x section (54 records)
+LAB +$0640, :1         # 0002
+LAB +$0649, :1         # 0003
+LAB +$0925, DRAWTHING         # 0002
+LAB +$022B, PLAY         # 0003
+LAB +$0236, PLAY2         # 0003
+LAB +$016C, SETUP         # 0001
+LAB +$017D, SETUP2         # 0002
+LAB +$08D7, DRAWTHING2         # 0001
+# 6x section (66 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -170,3 +179,15 @@ COM +$0A36, looks like an HGR
 COM +$0A38, address index table
 COM +$01B5, Y=hgr line # to clr
 COM +$01AA, clr last 2 HGR lines
+COM +$063E, white
+COM +$062B, HPLOT 70,49 TO 
+COM +$062D, 195,49
+COM +$063C, 18*7=126 pixels
+COM +$0631, 10*7=70
+COM +$064E, $30 times
+COM +$0649, draw something
+COM +$0656, full screen HGR
+COM +$065C, back to text mode
+COM +$0170, is this ever called?
+COM +$08D7, DRAW SOMETHING 
+COM +$08D8, BASED ON A REG

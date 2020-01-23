@@ -36,6 +36,9 @@ def decode_2x(f):
         elif rtype == 0x23:
             assert var_len == 0
             print(f"DA  +${offset:04X}, ${area_len:02X}")
+        elif rtype == 0x20:
+            assert var_len == 0
+            print(f"DB  +${offset:04X}, ${area_len:02X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {offset:08X} {area_len:04X}")
 
@@ -58,7 +61,11 @@ def decode_4x(f):
             assert count == 1
             print(f"EQU  ${address:04X}, {var_data}")
         elif rtype == 0x40:
-            # No idea what count field does. Seen 1, 2, 3, 9, $c.
+            # Count field appears to be either the length of the instruction
+            # at the label, or the length of the data (constant) at the label.
+            # For example it will be 3 at LDA $1234, and $C0 at :DB addr,C0.
+            # It is not known whether this needs to be accurate in the file,
+            # or if it's just a memory dump, like the :COM arg pointer.
             print(f"LAB +${address:04X}, {var_data}         # {count:04X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {address:08X} {count:04X} {var_data}")

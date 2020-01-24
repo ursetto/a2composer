@@ -1,4 +1,4 @@
-# TFBD (265 records total)
+# TFBD (266 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (83 records)
+# 4x section (84 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -142,6 +142,7 @@ LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
+EQU  $4040, SONGDATA
 # 6x section (124 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11

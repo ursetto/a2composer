@@ -56,8 +56,8 @@ DW  +$0972, $0E
 DB  +$0980, $54
 DB  +$09D4, $54
 DB  +$0A28, $0E
-28 00 00000CAC 0020
-28 00 00000CCC 0100
+DS  +$0CAC, $20
+DS  +$0CCC, $100
 # 4x section (83 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002

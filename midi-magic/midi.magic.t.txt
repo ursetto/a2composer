@@ -1,4 +1,4 @@
-# TFBD (259 records total)
+# TFBD (263 records total)
 # 2x section (56 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -140,7 +140,7 @@ LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (120 records)
+# 6x section (124 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -261,3 +261,7 @@ COM +$0908, hold 7 notes
 COM +$090B, (14 pixel bits)
 COM +$0919, as above, using
 COM +$091B, AND mask
+COM +$0972, mask ANDed to
+COM +$0974, turn off notes
+COM +$0978, this is just
+COM +$097A, PIXMASK EOR #$7F

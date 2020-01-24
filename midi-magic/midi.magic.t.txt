@@ -1,4 +1,4 @@
-# TFBD (274 records total)
+# TFBD (278 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -142,7 +142,7 @@ LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (133 records)
+# 6x section (137 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -276,3 +276,7 @@ COM +$0210, reuse drawroll to
 COM +$0212, show tempo as
 COM +$0215, "note" on bottom
 COM +$0216, 2 lines of scrn
+COM +$0202, DRAWROLL uses $0A
+COM +$0204, drawroll does 0-$54 only
+COM +$0207, so $7F-0 below may
+COM +$0208, be wrong -----

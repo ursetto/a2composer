@@ -30,18 +30,21 @@ def decode_2x(f):
     for i in range(section_count):
         (rtype, var_len, offset, area_len) = read_unpack(f, "<BBIH")
         assert (rtype & 0xf0) == 0x20
-        if rtype == 0x29:
-            assert var_len == 0
-            print(f"ASC +${offset:04X}, ${area_len:02X}")
-        elif rtype == 0x23:
-            assert var_len == 0
-            print(f"DA  +${offset:04X}, ${area_len:02X}")
-        elif rtype == 0x20:
+        if rtype == 0x20:
             assert var_len == 0
             print(f"DB  +${offset:04X}, ${area_len:02X}")
         elif rtype == 0x21:
             assert var_len == 0
             print(f"DW  +${offset:04X}, ${area_len:02X}")            
+        elif rtype == 0x23:
+            assert var_len == 0
+            print(f"DA  +${offset:04X}, ${area_len:02X}")
+        elif rtype == 0x28:
+            assert var_len == 0
+            print(f"DS  +${offset:04X}, ${area_len:02X}")
+        elif rtype == 0x29:
+            assert var_len == 0
+            print(f"ASC +${offset:04X}, ${area_len:02X}")
         else:
             print(f"{rtype:02X} {var_len:02X} {offset:08X} {area_len:04X}")
 

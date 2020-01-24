@@ -1,5 +1,5 @@
-# TFBD (221 records total)
-# 2x section (51 records)
+# TFBD (246 records total)
+# 2x section (56 records)
 ASC +$0044, $01
 ASC +$0045, $14
 ASC +$0062, $0C
@@ -51,7 +51,12 @@ ASC +$0BE4, $03
 DB  +$0A36, $C0
 DB  +$0AF6, $C0
 DB  +$0913, $01
-# 4x section (78 records)
+DB  +$0964, $0E
+DB  +$0972, $0E
+DB  +$0980, $54
+DB  +$09D4, $54
+DB  +$0A28, $0E
+# 4x section (83 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -130,7 +135,12 @@ LAB +$0914, :second         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002
 LAB +$062B, CLEARROLL         # 0002
-# 6x section (92 records)
+LAB +$0964, PIXMASK         # 0001
+LAB +$0972, PIXMASK2         # 0001
+LAB +$0980, MASKIDX         # 0001
+LAB +$09D4, XINDEX         # 0001
+LAB +$0A28, UNUSEDX         # 0001
+# 6x section (107 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -199,10 +209,10 @@ COM +$08D7, DRAW SOMETHING
 COM +$08D8, (maybe note num?)
 COM +$08E2, main entry point
 COM +$0911, always
-COM +$08F3, A input is index
-COM +$08DA, Accept A = 35-101
+COM +$08F3, note is index
+COM +$08DA, Accept A = 35-100
 COM +$08DC, and rescale to
-COM +$08DE, A = 0-66
+COM +$08DE, A = 0-65
 COM +$08E7, HGR x=70 y=Y
 COM +$08E0, HGR y=49
 COM +$0952, 126 pixels wide
@@ -222,4 +232,19 @@ COM +$093F, *prev = *this
 COM +$094B, *this = next line
 COM +$064C, to clear whole roll
 COM +$0643, draw top line
-COM +$08FC, what's in zp $0A ?
+COM +$08FC, #00 or #FF
+COM +$0297, skip next inst
+COM +$08F8, index into PIXMASK
+COM +$08F4, index into HGR line
+COM +$0900, 7 pixel pixmask
+COM +$0908, next 7 pixel mask
+COM +$0A28, Appears unused as
+COM +$0A29, MASKIDX len is $54.
+COM +$0980, Index into PIXMASK
+COM +$0981, based on note num
+COM +$0983, Len=$54 but only
+COM +$0984, first $42 is used
+COM +$09D4, Index into HGR byte
+COM +$09D5, based on note num
+COM +$09D7, These are in groups
+COM +$09D8, of 7 pixels

@@ -14,7 +14,7 @@
           LDA MIXCLR
           LDA CLR80VID
           JSR SETVID
-          JSR $03EA
+          JSR RECONNECTIO ;  CONNECT DOS KBD/SCRN INTERCEPT
           LDA #$FF
           STA $D9
           LDA #$00
@@ -29,19 +29,19 @@ START     LDA #$00
           STA $0B
           TAY
 :ZEROTABLES LDA #$00
-          STA $14AC,Y    ; OVERLAP
+          STA DISKNAME,Y ; OVERLAP
           STA FILETBL,Y
           LDA #$FF
           STA $4040,Y
           INY
           BNE :ZEROTABLES
-          JSR OUTPUT
+          JSR OUTSTR
           ASC 8D
           ASC 84
           ASC "BLOAD LOGO,A$2000"8D00
           LDA TXTCLR
           JSR INITnDIE
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "STANDBY...!"00
           STA KBDSTROBE
           LDY #$20
@@ -55,20 +55,20 @@ TXTTITLE  STA KBDSTROBE
           LDA TXTSET
           LDA TXTPAGE1
           JSR HOME
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "!!!!  MIDIMAGIC PLAYER!  DEVELOPED BY B"
           ASC "OB KOVACS!  COPYRIGHT 1985!  ALL RIGHTS"
           ASC " RESERVED!  MICROFANTICS INC.!"00
           JMP PRESSANYKEY
 
-MAINLOOP  LDA $0B        ; $0b=current song or 0
+MAINLOOP  LDA $0B        ; ISPLAYING
           BEQ SELECT
           INC CURSONG
           LDA CURSONG
           CMP SONGCNT
           BCC PLAYSEL
           LDA #$00
-          STA $0B
+          STA $0B        ; ISPLAYING
           DEC CURSONG
           JMP MAINLOOP
 
@@ -113,16 +113,16 @@ RTSTBL    DA $0E16
           DA $0E6E
           DA $13B5
 CHOICES   ASC "12345678ARI?"
-          SEI
-          JMP $097D
+SETUP     SEI
+          JMP SETUP2
 
-          LDY #$27
+          LDY #$27       ; is this ever called?
           LDA #$AE
-          STA $0750,Y
-          STA $07D0,Y
+          STA $0750,Y    ; FILL 750-777 W/$AE
+          STA $07D0,Y    ; FILL 7D0-7F7 W/$AE
           DEY
           BPL $0974
-          LDA #$13
+SETUP2    LDA #$13
           STA SSC_TDREG
           LDA #$80
           JSR SUMDELAY
@@ -137,53 +137,53 @@ CHOICES   ASC "12345678ARI?"
           LDA #$40
           STA $01
           LDA #$00
-          STA $0305
+          STA LASTKEY
           STA KBDSTROBE
-          JSR $09AA
+          JSR CLRBOTTOM
           RTS
 
-          LDY #$BF
-          JSR $09B5
+CLRBOTTOM LDY #$BF       ; clr last 2 HGR lines
+          JSR CLRLINE
           LDY #$BE
-          JSR $09B5
+          JSR CLRLINE
           RTS
 
-          LDA $1236,Y
+CLRLINE   LDA HGRLO,Y    ; Y=hgr line # to clr
           STA $06
-          LDA $12F6,Y
+          LDA HGRHI,Y
           CLC
           ADC #$20
           STA $07
-          LDY #$27
+          LDY #$27       ; 40 bytes / HGR line
           LDA #$00
-          STA ($06),Y
+]1        STA ($06),Y
           DEY
-          BPL $09C6
+          BPL ]1
           RTS
 
-          LDA TEMPO
-          CMP #$9F
-          BCS $09D9
+INCTEMPO  LDA TEMPO
+          CMP #$9F       ; max tempo 159
+          BCS :ret
           INC TEMPO
-          JSR $09F2
-          LDA #$00
-          STA $0305
+          JSR UPDATETEMPO
+:ret      LDA #$00
+          STA LASTKEY
           RTS
 
-          LDA TEMPO
-          CMP #$21
-          BCC $09EC
+DECTEMPO  LDA TEMPO
+          CMP #$21       ; min tempo 32
+          BCC :ret
           DEC TEMPO
-          JSR $09F2
-          LDA #$00
-          STA $0305
+          JSR UPDATETEMPO
+:ret      LDA #$00
+          STA LASTKEY
           RTS
 
-          JSR CURSONGIDX
+UPDATETEMPO JSR CURSONGIDX
           LDA TEMPO
           ORA #$80
           STA FILETBL,Y
-          JSR $09AA
+          JSR CLRBOTTOM
           LDA #$00
           STA $0A
           LDA TEMPO
@@ -194,10 +194,10 @@ CHOICES   ASC "12345678ARI?"
           LSR
           PHA
           LDY #$BF
-          JSR $10E2
+          JSR DRAWROLL
           PLA
           LDY #$BE
-          JSR $10E2
+          JSR DRAWROLL
           RTS
 
 CURSONGIDX LDA #$00      ; Y=$303*32
@@ -210,41 +210,41 @@ CURSONGIDX LDA #$00      ; Y=$303*32
 :DONE     TAY
           RTS
 
-          JSR CURSONGIDX
+PLAY      JSR CURSONGIDX
           LDA FILETBL,Y  ; filename byte 0
           AND #$7F       ; lower 7 bits
           STA TEMPO      ; are the tempo
-          LDA KBD
+PLAY2     LDA KBD
           STA KBDSTROBE
-          BPL $0A4F
-          STA $0305
-          CMP #$95
-          BNE $0A48
-          JSR $09DF
-          CMP #$88
-          BNE $0A4F
-          JSR $09CC
-          LDA $0305
+          BPL :nokey
+          STA LASTKEY    ; save last keypress?
+          CMP #$95       ; right arrow key
+          BNE :next
+          JSR DECTEMPO
+:next     CMP #$88       ; left arrow key
+          BNE :nokey
+          JSR INCTEMPO
+:nokey    LDA LASTKEY
           BPL $0A57
           JMP $0B44
 
-          JSR $0B2D
+          JSR NEXTSONGBYTE
           CMP #$FF
           BNE $0A82
-          JSR $0B2D
-          BEQ $0A36
+          JSR NEXTSONGBYTE
+          BEQ PLAY2
           CMP #$FF
           BNE $0A6E
           LDA #$FF
-          STA $0305
-          BNE $0A36
+          STA LASTKEY
+          BNE PLAY2
           STA $0306
           LDA TEMPO
           JSR SUMDELAY
-          JSR $1125
+          JSR SCROLLROLL
           DEC $0306
           BNE $0A71
-          JMP $0A36
+          JMP PLAY2
 
           PHA
           LDA #$90
@@ -257,7 +257,7 @@ CURSONGIDX LDA #$00      ; Y=$303*32
           PLA
           BMI $0A99
           LDA #$40
-          BNE $0A9B
+          BNE $0A9B      ; skip next inst
           LDA #$00
           STA $0308
           JSR $0AEF
@@ -267,10 +267,10 @@ CURSONGIDX LDA #$00      ; Y=$303*32
           LDA #$FF
           STA $0A
           LDA $0307
-          JSR $10D7
+          JSR DRAWNOTE
           JMP $0ADD
 
-          LDA $0309
+ANIMATE   LDA $0309
           SEC
           SBC #$1C
           BMI $0ADD
@@ -279,22 +279,22 @@ CURSONGIDX LDA #$00      ; Y=$303*32
           ROL
           LSR
           TAY
-          LDA #$AE
+          LDA #$AE       ; '.'
           LDX #$80
           CPX $0308
           BEQ $0AD2
           LDX $0307
           BEQ $0AD2
-          LDA #$AA
+          LDA #$AA       ; '*'
           PLP
           BCC $0ADA
-          STA $0750,Y
+          STA $0750,Y    ; 23RD TEXT LINE
           BCS $0ADD
-          STA $07D0,Y
+          STA $07D0,Y    ; 24TH TEXT LINE
           LDY #$00
           STY $0308
           STY $0307
-          JMP $0A36
+          JMP PLAY2
 
           PHA
           LDA #$0A
@@ -338,9 +338,9 @@ CURSONGIDX LDA #$00      ; Y=$303*32
           BIT $00
           RTS
 
-          INC $00
-          BNE $0B33
-          INC $01
+NEXTSONGBYTE INC $00     ; A=($00++)
+          BNE $0B33      ; Read next song byte
+          INC $01        ; and inc songptr
           LDY #$00
           LDA ($00),Y
           RTS
@@ -391,13 +391,13 @@ GETKEY    STA KBDSTROBE
 MAINMENU  LDA TXTSET
           LDA TXTPAGE1
           JSR HOME
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "!***** QRS DIGITAL PRESENTS *****!! MID"
           ASC "IMAGIC PLAYER FOR THE APPLE!"00
           LDA #$A0
           JSR COUT
           LDY #$00
-PRINTDISK LDA $14AC,Y
+PRINTDISK LDA DISKNAME,Y
           CMP #$8D
           BEQ $0BE8
           JSR COUT
@@ -410,14 +410,14 @@ PRINTDISK LDA $14AC,Y
 PRINTSONG INY
           LDA FILETBL,Y
           BEQ MENU
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "     "00
           INC SONGCNT
           LDA SONGCNT
           CLC
           ADC #$B0       ; int->digit
           JSR COUT
-          JSR OUTPUT
+          JSR OUTSTR
           ASC " ... "00
           JSR PRFILNAM
           JSR CROUT
@@ -426,7 +426,7 @@ PRINTSONG INY
           INY
           BNE PRINTSONG
 MENU      JSR CROUT
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "     A ... PLAY ALL SONGS!     R ... RE"
           ASC "PEAT LAST SONG!     I ... INSTRUCTIONS!"
           ASC "!!     SELECTION --> "
@@ -452,10 +452,10 @@ LOADFILE  LDA #$00
           STY $09        ; IDX INTO FILETBL
           LDY #$1D       ; LOADING: 
           JSR BLOADCMD
-          LDY $09        ; 
+          LDY $09
           INY
           JSR PRFILNAM
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "!!YOU CAN STOP THE SONG AT ANY TIME!WHI"
           ASC "LE IT IS PLAYING BY PRESSING THE!SPACE "
           ASC "BAR.!!IF YOU ARE PLAYING ALL SONGS THEN"
@@ -475,7 +475,7 @@ LOADFILE  LDA #$00
 PRESSANYKEY LDA #$17
           JSR TABV
           JSR CLREOL
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "Press Any Key To Continue"00
           JSR GETKEY
           JMP MAINLOOP
@@ -487,30 +487,30 @@ NEXTSONGP CMP SONGCNT
 NEXTSONG  STA CURSONG
           JSR INITnDIE
           JSR LOADFILE
-          JSR $096C
-          LDY #$31
-          LDA $1236,Y
+          JSR SETUP
+CLEARROLL LDY #$31       ; HPLOT 70,49 TO
+          LDA HGRLO,Y    ; 195,49
           CLC
-          ADC #$0A
+          ADC #$0A       ; 10*7=70
           STA $06
-          LDA $12F6,Y
+          LDA HGRHI,Y
           ADC #$20
           STA $07
-          LDY #$12
-          LDA #$7F
-          STA ($06),Y
+          LDY #$12       ; 18*7=126 pixels
+          LDA #$7F       ; white
+:1        STA ($06),Y
           DEY
-          BPL $0E40
+          BPL :1         ; draw top line
           LDA #$29
           STA $02
-          JSR $1125
-          DEC $02
-          BPL $0E49
+:1        JSR SCROLLROLL ; scroll $2A times
+          DEC $02        ; to clear whole roll
+          BPL :1         ; to white
           STA TXTCLR
           STA HIRES
-          STA MIXCLR
-          JSR $0A2B
-          STA TXTSET
+          STA MIXCLR     ; full screen HGR
+          JSR PLAY
+          STA TXTSET     ; back to text mode
           JMP MAINLOOP
 
           LDA #$FF
@@ -519,7 +519,7 @@ NEXTSONG  STA CURSONG
           JMP MAINLOOP
           JMP $0E28
 
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "THIS PROGRAM IS COMPATIBLE WITH THE!ENT"
           ASC "IRE APPLE II FAMILY OF COMPUTERS.!!IF Y"
           ASC "OU ARE USING AN APPLE II C THEN!MAKE SU"
@@ -535,7 +535,7 @@ NEXTSONG  STA CURSONG
           ASC "  BUTLER, NJ 07405!"00
           JMP PRESSANYKEY
 
-OUTPUT    TSX
+OUTSTR    TSX
           INX
           LDA $0100,X
           STA $02
@@ -571,9 +571,9 @@ OUTPUT    TSX
           INC $03
           RTS
 
-BLOADCMD  LDA :STRS,Y    ; 
+BLOADCMD  LDA :STRS,Y
           BEQ $10AC
-          CMP #$A1       ; 
+          CMP #$A1
           BNE $10A6
           LDA #$8D
           JSR COUT
@@ -590,418 +590,671 @@ BLOADCMD  LDA :STRS,Y    ;
           ASC "!!!"
           ASC 'LOADING'
           ASC ": "00
-          SEC
-          SBC #$23
-          BMI $1124
-          CMP #$42
-          BCS $1124
-          LDY #$31
-          PHA
-          LDA $1236,Y
+DRAWNOTE  SEC            ; DRAW SOMETHING 
+          SBC #$23       ; (maybe note num?)
+          BMI :ret       ; Accept A = 35-100
+          CMP #$42       ; and rescale to
+          BCS :ret       ; A = 0-65
+          LDY #$31       ; HGR y=49
+DRAWROLL  PHA            ; main entry point
+          LDA HGRLO,Y
           CLC
-          ADC #$0A
+          ADC #$0A       ; HGR x=70 y=Y
           STA $06
-          LDA $12F6,Y
+          LDA HGRHI,Y
           ADC #$20
           STA $07
           PLA
-          TAX
-          LDA $11D4,X
+          TAX            ; note is index
+          LDA XINDEX,X   ; index into HGR line
           TAY
-          LDA $1180,X
+          LDA MASKIDX,X  ; index into PIXMASK
           TAX
-          BIT $0A
-          BMI $1114
-          LDA $1164,X
-          ORA ($06),Y
-          STA ($06),Y
-          INX
-          LDA $1164,X
-          INY
+          BIT $0A        ; #00 or #FF
+          BMI :off
+          LDA PIXMASK,X  ; OR in 2 mask bytes
+          ORA ($06),Y    ; per note; each note
+          STA ($06),Y    ; is 2 pixels wide
+          INX            ; (white) so 2 bytes
+          LDA PIXMASK,X  ; hold 7 notes
+          INY            ; (14 pixel bits)
           ORA ($06),Y
           STA ($06),Y
           CLC
-          BCC $1124
-          BRK $BD
-          ADC ($11)
-          AND ($06),Y
-          STA ($06),Y
-          INX
-          LDA $1172,X
+          BCC :ret       ; always
+          DB $00
+:off      LDA PIXMASK2,X
+          AND ($06),Y    ; turn note off
+          STA ($06),Y    ; as above, using
+          INX            ; AND mask
+          LDA PIXMASK2,X
           INY
           AND ($06),Y
           STA ($06),Y
-          RTS
+:ret      RTS
 
-          LDY #$5A
-          LDA $1236,Y
-          CLC
+SCROLLROLL LDY #$5A      ; Scroll the area
+          LDA HGRLO,Y    ; from 70,49-195,90
+          CLC            ; down by 1 pixel
           ADC #$0A
           STA $04
-          LDA $12F6,Y
+          LDA HGRHI,Y
           ADC #$20
           STA $05
           DEY
-          STY $08
-          LDA $04
-          STA $06
+          STY $08        ; $08: curline
+:2        LDA $04        ; $04-05: this addr
+          STA $06        ; $06-07: prev addr
           LDA $05
-          STA $07
+          STA $07        ; *prev = *this
           LDY $08
-          LDA $1236,Y
+          LDA HGRLO,Y
           CLC
-          ADC #$0A
+          ADC #$0A       ; x=70
           STA $04
-          LDA $12F6,Y
+          LDA HGRHI,Y    ; *this = next line
           ADC #$20
           STA $05
-          LDY #$12
-          LDA ($04),Y
-          STA ($06),Y
+          LDY #$12       ; 126 pixels wide
+:1        LDA ($04),Y    ; copy line above
+          STA ($06),Y    ; to line below
           DEY
-          BPL $1154
-          DEC $08
+          BPL :1
+          DEC $08        ; line--
           LDY $08
-          CPY #$31
-          BCS $1139
+          CPY #$31       ; while line >= 49
+          BCS :2
           RTS
 
-          ORA $00,S
-          TSB $3000
-          BRK $40
-          ORA ($00,X)
-          ASL $00
-          CLC
-          BRK $60
-          JMP ($737F,X)
-
-          ADCL $3F7F4F,X
-          ROR $797F,X
-          ADCL $1F7F67,X
-          BRK $02
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB $0200
-          TSB $06
-          PHP
-          ASL
-          TSB |SONGPTR
-          BRK $00
-          BRK $00
-          BRK $02
-          COP $02
-          COP $02
-          COP $02
-          TSB $04
-          TSB $04
-          TSB $04
-          TSB $06
-          ASL $06
-          ASL $06
-          ASL $06
-          PHP
-          PHP
-          PHP
-          PHP
-          PHP
-          PHP
-          PHP
-          ASL
-          ASL
-          ASL
-          ASL
-          ASL
-          ASL
-          ASL
-          TSB $0C0C
-          TSB $0C0C
-          TSB $0E0E
-          ASL $0E0E
-          ASL $100E
-          BPL $121F
-          BPL $1221
-          BPL $1223
-          ORA ($12)
-          ORA ($12)
-          ORA ($12)
-          ORA ($14)
-          TRB $14
-          TRB $14
-          TRB $14
-          ASL $16,X
-          ASL $16,X
-          ASL $16,X
-          ASL $18,X
-          CLC
-          CLC
-          CLC
-          CLC
-          CLC
-          CLC
-          INC
-          INC
-          INC
-          INC
-          INC
-          INC
-          INC
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRA $11C0
-          BRA $11C2
-          BRA $11C4
-          BRA $11C6
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRA $11D0
-          BRA $11D2
-          BRA $11D4
-          BRA $11D6
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRA $11E0
-          BRA $11E2
-          BRA $11E4
-          BRA $11E6
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRA $11F0
-          BRA $11F2
-          BRA $11F4
-          BRA $11F6
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          PLP
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          TAY
-          BVC $1308
-          BVC $130A
-          BVC $130C
-          BVC $130E
-          BNE $1290
-          BNE $1292
-          BNE $1294
-          BNE $1296
-          BVC $1318
-          BVC $131A
-          BVC $131C
-          BVC $131E
-          BNE $12A0
-          BNE $12A2
-          BNE $12A4
-          BNE $12A6
-          BVC $1328
-          BVC $132A
-          BVC $132C
-          BVC $132E
-          BNE $12B0
-          BNE $12B2
-          BNE $12B4
-          BNE $12B6
-          BVC $1338
-          BVC $133A
-          BVC $133C
-          BVC $133E
-          BNE $12C0
-          BNE $12C2
-          BNE $12C4
-          BNE $12C6
-          BRK $04
-          PHP
-          TSB $1410
-          CLC
-          TRB $0400
-          PHP
-          TSB $1410
-          CLC
-          TRB $0501
-          ORA #$0D
-          ORA ($15),Y
-          ORA $011D,Y
-          ORA $09
-          ORA $1511
-          ORA $021D,Y
-          ASL $0A
-          ASL $1612
-          INC
-          ASL $0602,X
-          ASL
-          ASL $1612
-          INC
-          ASL $0703,X
-          PHD
-          ORAL $1B1713
-          ORAL $0B0703,X
-          ORAL $1B1713
-          ORAL $080400,X
-          TSB $1410
-          CLC
-          TRB $0400
-          PHP
-          TSB $1410
-          CLC
-          TRB $0501
-          ORA #$0D
-          ORA ($15),Y
-          ORA $011D,Y
-          ORA $09
-          ORA $1511
-          ORA $021D,Y
-          ASL $0A
-          ASL $1612
-          INC
-          ASL $0602,X
-          ASL
-          ASL $1612
-          INC
-          ASL $0703,X
-          PHD
-          ORAL $1B1713
-          ORAL $0B0703,X
-          ORAL $1B1713
-          ORAL $080400,X
-          TSB $1410
-          CLC
-          TRB $0400
-          PHP
-          TSB $1410
-          CLC
-          TRB $0501
-          ORA #$0D
-          ORA ($15),Y
-          ORA $011D,Y
-          ORA $09
-          ORA $1511
-          ORA $021D,Y
-          ASL $0A
-          ASL $1612
-          INC
-          ASL $0602,X
-          ASL
-          ASL $1612
-          INC
-          ASL $0703,X
-          PHD
-          ORAL $1B1713
-          ORAL $0B0703,X
-          ORAL $1B1713
-          ORAL $105D20,X
+PIXMASK   DW $0003       ; mask ORed into
+PIXMASK+2 DW $000C       ; 2 adjacent bytes
+PIXMASK+4 DW $0030       ; 1 DW per note
+PIXMASK+6 DW $0140       ; 2 white pixels
+PIXMASK+8 DW $0600       ; per note
+PIXMASK+$A DW $1800
+PIXMASK+$C DW $6000
+PIXMASK2  DW $7F7C       ; mask ANDed to
+PIXMASK2+2 DW $7F73      ; turn off notes
+PIXMASK2+4 DW $7F4F
+PIXMASK2+6 DW $7E3F      ; this is just
+PIXMASK2+8 DW $797F      ; PIXMASK EOR #$7F
+PIXMASK2+$A DW $677F
+PIXMASK2+$C DW $1F7F
+MASKIDX   DB $00         ; Index into PIXMASK
+          DB $02         ; based on note num
+          DB $04
+          DB $06         ; Len=$54 but only
+          DB $08         ; first $42 is used
+          DB $0A
+          DB $0C         ; Repeats every
+          DB $00         ; 7 notes
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+          DB $00
+          DB $02
+          DB $04
+          DB $06
+          DB $08
+          DB $0A
+          DB $0C
+XINDEX    DB $00         ; Index into HGR byte
+          DB $00         ; based on note num
+          DB $00
+          DB $00         ; These are in groups
+          DB $00         ; of 7 pixels
+          DB $00
+          DB $00
+          DB $02
+          DB $02
+          DB $02
+          DB $02
+          DB $02
+          DB $02
+          DB $02
+          DB $04
+          DB $04
+          DB $04
+          DB $04
+          DB $04
+          DB $04
+          DB $04
+          DB $06
+          DB $06
+          DB $06
+          DB $06
+          DB $06
+          DB $06
+          DB $06
+          DB $08
+          DB $08
+          DB $08
+          DB $08
+          DB $08
+          DB $08
+          DB $08
+          DB $0A
+          DB $0A
+          DB $0A
+          DB $0A
+          DB $0A
+          DB $0A
+          DB $0A
+          DB $0C
+          DB $0C
+          DB $0C
+          DB $0C
+          DB $0C
+          DB $0C
+          DB $0C
+          DB $0E
+          DB $0E
+          DB $0E
+          DB $0E
+          DB $0E
+          DB $0E
+          DB $0E
+          DB $10
+          DB $10
+          DB $10
+          DB $10
+          DB $10
+          DB $10
+          DB $10
+          DB $12
+          DB $12
+          DB $12
+          DB $12
+          DB $12
+          DB $12
+          DB $12
+          DB $14
+          DB $14
+          DB $14
+          DB $14
+          DB $14
+          DB $14
+          DB $14
+          DB $16
+          DB $16
+          DB $16
+          DB $16
+          DB $16
+          DB $16
+          DB $16
+UNUSEDX   DB $18         ; Appears unused as
+          DB $18         ; MASKIDX len is $54.
+          DB $18
+          DB $18
+          DB $18
+          DB $18
+          DB $18
+          DB $1A
+          DB $1A
+          DB $1A
+          DB $1A
+          DB $1A
+          DB $1A
+          DB $1A
+HGRLO     DB $00         ; looks like an HGR
+HGRLO+1   DB $00
+HGRLO+2   DB $00         ; address index table
+HGRLO+3   DB $00
+HGRLO+4   DB $00
+HGRLO+5   DB $00
+HGRLO+6   DB $00
+HGRLO+7   DB $00
+HGRLO+8   DB $80
+HGRLO+9   DB $80
+HGRLO+$A  DB $80
+HGRLO+$B  DB $80
+HGRLO+$C  DB $80
+HGRLO+$D  DB $80
+HGRLO+$E  DB $80
+HGRLO+$F  DB $80
+HGRLO+$10 DB $00
+HGRLO+$11 DB $00
+HGRLO+$12 DB $00
+HGRLO+$13 DB $00
+HGRLO+$14 DB $00
+HGRLO+$15 DB $00
+HGRLO+$16 DB $00
+HGRLO+$17 DB $00
+HGRLO+$18 DB $80
+HGRLO+$19 DB $80
+HGRLO+$1A DB $80
+HGRLO+$1B DB $80
+HGRLO+$1C DB $80
+HGRLO+$1D DB $80
+HGRLO+$1E DB $80
+HGRLO+$1F DB $80
+HGRLO+$20 DB $00
+HGRLO+$21 DB $00
+HGRLO+$22 DB $00
+HGRLO+$23 DB $00
+HGRLO+$24 DB $00
+HGRLO+$25 DB $00
+HGRLO+$26 DB $00
+HGRLO+$27 DB $00
+HGRLO+$28 DB $80
+HGRLO+$29 DB $80
+HGRLO+$2A DB $80
+HGRLO+$2B DB $80
+HGRLO+$2C DB $80
+HGRLO+$2D DB $80
+HGRLO+$2E DB $80
+HGRLO+$2F DB $80
+HGRLO+$30 DB $00
+HGRLO+$31 DB $00
+HGRLO+$32 DB $00
+HGRLO+$33 DB $00
+HGRLO+$34 DB $00
+HGRLO+$35 DB $00
+HGRLO+$36 DB $00
+HGRLO+$37 DB $00
+HGRLO+$38 DB $80
+HGRLO+$39 DB $80
+HGRLO+$3A DB $80
+HGRLO+$3B DB $80
+HGRLO+$3C DB $80
+HGRLO+$3D DB $80
+HGRLO+$3E DB $80
+HGRLO+$3F DB $80
+HGRLO+$40 DB $28
+HGRLO+$41 DB $28
+HGRLO+$42 DB $28
+HGRLO+$43 DB $28
+HGRLO+$44 DB $28
+HGRLO+$45 DB $28
+HGRLO+$46 DB $28
+HGRLO+$47 DB $28
+HGRLO+$48 DB $A8
+HGRLO+$49 DB $A8
+HGRLO+$4A DB $A8
+HGRLO+$4B DB $A8
+HGRLO+$4C DB $A8
+HGRLO+$4D DB $A8
+HGRLO+$4E DB $A8
+HGRLO+$4F DB $A8
+HGRLO+$50 DB $28
+HGRLO+$51 DB $28
+HGRLO+$52 DB $28
+HGRLO+$53 DB $28
+HGRLO+$54 DB $28
+HGRLO+$55 DB $28
+HGRLO+$56 DB $28
+HGRLO+$57 DB $28
+HGRLO+$58 DB $A8
+HGRLO+$59 DB $A8
+HGRLO+$5A DB $A8
+HGRLO+$5B DB $A8
+HGRLO+$5C DB $A8
+HGRLO+$5D DB $A8
+HGRLO+$5E DB $A8
+HGRLO+$5F DB $A8
+HGRLO+$60 DB $28
+HGRLO+$61 DB $28
+HGRLO+$62 DB $28
+HGRLO+$63 DB $28
+HGRLO+$64 DB $28
+HGRLO+$65 DB $28
+HGRLO+$66 DB $28
+HGRLO+$67 DB $28
+HGRLO+$68 DB $A8
+HGRLO+$69 DB $A8
+HGRLO+$6A DB $A8
+HGRLO+$6B DB $A8
+HGRLO+$6C DB $A8
+HGRLO+$6D DB $A8
+HGRLO+$6E DB $A8
+HGRLO+$6F DB $A8
+HGRLO+$70 DB $28
+HGRLO+$71 DB $28
+HGRLO+$72 DB $28
+HGRLO+$73 DB $28
+HGRLO+$74 DB $28
+HGRLO+$75 DB $28
+HGRLO+$76 DB $28
+HGRLO+$77 DB $28
+HGRLO+$78 DB $A8
+HGRLO+$79 DB $A8
+HGRLO+$7A DB $A8
+HGRLO+$7B DB $A8
+HGRLO+$7C DB $A8
+HGRLO+$7D DB $A8
+HGRLO+$7E DB $A8
+HGRLO+$7F DB $A8
+HGRLO+$80 DB $50
+HGRLO+$81 DB $50
+HGRLO+$82 DB $50
+HGRLO+$83 DB $50
+HGRLO+$84 DB $50
+HGRLO+$85 DB $50
+HGRLO+$86 DB $50
+HGRLO+$87 DB $50
+HGRLO+$88 DB $D0
+HGRLO+$89 DB $D0
+HGRLO+$8A DB $D0
+HGRLO+$8B DB $D0
+HGRLO+$8C DB $D0
+HGRLO+$8D DB $D0
+HGRLO+$8E DB $D0
+HGRLO+$8F DB $D0
+HGRLO+$90 DB $50
+HGRLO+$91 DB $50
+HGRLO+$92 DB $50
+HGRLO+$93 DB $50
+HGRLO+$94 DB $50
+HGRLO+$95 DB $50
+HGRLO+$96 DB $50
+HGRLO+$97 DB $50
+HGRLO+$98 DB $D0
+HGRLO+$99 DB $D0
+HGRLO+$9A DB $D0
+HGRLO+$9B DB $D0
+HGRLO+$9C DB $D0
+HGRLO+$9D DB $D0
+HGRLO+$9E DB $D0
+HGRLO+$9F DB $D0
+HGRLO+$A0 DB $50
+HGRLO+$A1 DB $50
+HGRLO+$A2 DB $50
+HGRLO+$A3 DB $50
+HGRLO+$A4 DB $50
+HGRLO+$A5 DB $50
+HGRLO+$A6 DB $50
+HGRLO+$A7 DB $50
+HGRLO+$A8 DB $D0
+HGRLO+$A9 DB $D0
+HGRLO+$AA DB $D0
+HGRLO+$AB DB $D0
+HGRLO+$AC DB $D0
+HGRLO+$AD DB $D0
+HGRLO+$AE DB $D0
+HGRLO+$AF DB $D0
+HGRLO+$B0 DB $50
+HGRLO+$B1 DB $50
+HGRLO+$B2 DB $50
+HGRLO+$B3 DB $50
+HGRLO+$B4 DB $50
+HGRLO+$B5 DB $50
+HGRLO+$B6 DB $50
+HGRLO+$B7 DB $50
+HGRLO+$B8 DB $D0
+HGRLO+$B9 DB $D0
+HGRLO+$BA DB $D0
+HGRLO+$BB DB $D0
+HGRLO+$BC DB $D0
+HGRLO+$BD DB $D0
+HGRLO+$BE DB $D0
+HGRLO+$BF DB $D0
+HGRHI     DB $00
+HGRHI+1   DB $04
+HGRHI+2   DB $08
+HGRHI+3   DB $0C
+HGRHI+4   DB $10
+HGRHI+5   DB $14
+HGRHI+6   DB $18
+HGRHI+7   DB $1C
+HGRHI+8   DB $00
+HGRHI+9   DB $04
+HGRHI+$A  DB $08
+HGRHI+$B  DB $0C
+HGRHI+$C  DB $10
+HGRHI+$D  DB $14
+HGRHI+$E  DB $18
+HGRHI+$F  DB $1C
+HGRHI+$10 DB $01
+HGRHI+$11 DB $05
+HGRHI+$12 DB $09
+HGRHI+$13 DB $0D
+HGRHI+$14 DB $11
+HGRHI+$15 DB $15
+HGRHI+$16 DB $19
+HGRHI+$17 DB $1D
+HGRHI+$18 DB $01
+HGRHI+$19 DB $05
+HGRHI+$1A DB $09
+HGRHI+$1B DB $0D
+HGRHI+$1C DB $11
+HGRHI+$1D DB $15
+HGRHI+$1E DB $19
+HGRHI+$1F DB $1D
+HGRHI+$20 DB $02
+HGRHI+$21 DB $06
+HGRHI+$22 DB $0A
+HGRHI+$23 DB $0E
+HGRHI+$24 DB $12
+HGRHI+$25 DB $16
+HGRHI+$26 DB $1A
+HGRHI+$27 DB $1E
+HGRHI+$28 DB $02
+HGRHI+$29 DB $06
+HGRHI+$2A DB $0A
+HGRHI+$2B DB $0E
+HGRHI+$2C DB $12
+HGRHI+$2D DB $16
+HGRHI+$2E DB $1A
+HGRHI+$2F DB $1E
+HGRHI+$30 DB $03
+HGRHI+$31 DB $07
+HGRHI+$32 DB $0B
+HGRHI+$33 DB $0F
+HGRHI+$34 DB $13
+HGRHI+$35 DB $17
+HGRHI+$36 DB $1B
+HGRHI+$37 DB $1F
+HGRHI+$38 DB $03
+HGRHI+$39 DB $07
+HGRHI+$3A DB $0B
+HGRHI+$3B DB $0F
+HGRHI+$3C DB $13
+HGRHI+$3D DB $17
+HGRHI+$3E DB $1B
+HGRHI+$3F DB $1F
+HGRHI+$40 DB $00
+HGRHI+$41 DB $04
+HGRHI+$42 DB $08
+HGRHI+$43 DB $0C
+HGRHI+$44 DB $10
+HGRHI+$45 DB $14
+HGRHI+$46 DB $18
+HGRHI+$47 DB $1C
+HGRHI+$48 DB $00
+HGRHI+$49 DB $04
+HGRHI+$4A DB $08
+HGRHI+$4B DB $0C
+HGRHI+$4C DB $10
+HGRHI+$4D DB $14
+HGRHI+$4E DB $18
+HGRHI+$4F DB $1C
+HGRHI+$50 DB $01
+HGRHI+$51 DB $05
+HGRHI+$52 DB $09
+HGRHI+$53 DB $0D
+HGRHI+$54 DB $11
+HGRHI+$55 DB $15
+HGRHI+$56 DB $19
+HGRHI+$57 DB $1D
+HGRHI+$58 DB $01
+HGRHI+$59 DB $05
+HGRHI+$5A DB $09
+HGRHI+$5B DB $0D
+HGRHI+$5C DB $11
+HGRHI+$5D DB $15
+HGRHI+$5E DB $19
+HGRHI+$5F DB $1D
+HGRHI+$60 DB $02
+HGRHI+$61 DB $06
+HGRHI+$62 DB $0A
+HGRHI+$63 DB $0E
+HGRHI+$64 DB $12
+HGRHI+$65 DB $16
+HGRHI+$66 DB $1A
+HGRHI+$67 DB $1E
+HGRHI+$68 DB $02
+HGRHI+$69 DB $06
+HGRHI+$6A DB $0A
+HGRHI+$6B DB $0E
+HGRHI+$6C DB $12
+HGRHI+$6D DB $16
+HGRHI+$6E DB $1A
+HGRHI+$6F DB $1E
+HGRHI+$70 DB $03
+HGRHI+$71 DB $07
+HGRHI+$72 DB $0B
+HGRHI+$73 DB $0F
+HGRHI+$74 DB $13
+HGRHI+$75 DB $17
+HGRHI+$76 DB $1B
+HGRHI+$77 DB $1F
+HGRHI+$78 DB $03
+HGRHI+$79 DB $07
+HGRHI+$7A DB $0B
+HGRHI+$7B DB $0F
+HGRHI+$7C DB $13
+HGRHI+$7D DB $17
+HGRHI+$7E DB $1B
+HGRHI+$7F DB $1F
+HGRHI+$80 DB $00
+HGRHI+$81 DB $04
+HGRHI+$82 DB $08
+HGRHI+$83 DB $0C
+HGRHI+$84 DB $10
+HGRHI+$85 DB $14
+HGRHI+$86 DB $18
+HGRHI+$87 DB $1C
+HGRHI+$88 DB $00
+HGRHI+$89 DB $04
+HGRHI+$8A DB $08
+HGRHI+$8B DB $0C
+HGRHI+$8C DB $10
+HGRHI+$8D DB $14
+HGRHI+$8E DB $18
+HGRHI+$8F DB $1C
+HGRHI+$90 DB $01
+HGRHI+$91 DB $05
+HGRHI+$92 DB $09
+HGRHI+$93 DB $0D
+HGRHI+$94 DB $11
+HGRHI+$95 DB $15
+HGRHI+$96 DB $19
+HGRHI+$97 DB $1D
+HGRHI+$98 DB $01
+HGRHI+$99 DB $05
+HGRHI+$9A DB $09
+HGRHI+$9B DB $0D
+HGRHI+$9C DB $11
+HGRHI+$9D DB $15
+HGRHI+$9E DB $19
+HGRHI+$9F DB $1D
+HGRHI+$A0 DB $02
+HGRHI+$A1 DB $06
+HGRHI+$A2 DB $0A
+HGRHI+$A3 DB $0E
+HGRHI+$A4 DB $12
+HGRHI+$A5 DB $16
+HGRHI+$A6 DB $1A
+HGRHI+$A7 DB $1E
+HGRHI+$A8 DB $02
+HGRHI+$A9 DB $06
+HGRHI+$AA DB $0A
+HGRHI+$AB DB $0E
+HGRHI+$AC DB $12
+HGRHI+$AD DB $16
+HGRHI+$AE DB $1A
+HGRHI+$AF DB $1E
+HGRHI+$B0 DB $03
+HGRHI+$B1 DB $07
+HGRHI+$B2 DB $0B
+HGRHI+$B3 DB $0F
+HGRHI+$B4 DB $13
+HGRHI+$B5 DB $17
+HGRHI+$B6 DB $1B
+HGRHI+$B7 DB $1F
+HGRHI+$B8 DB $03
+HGRHI+$B9 DB $07
+HGRHI+$BA DB $0B
+HGRHI+$BB DB $0F
+HGRHI+$BC DB $13
+HGRHI+$BD DB $17
+HGRHI+$BE DB $1B
+HGRHI+$BF DB $1F
+          JSR OUTSTR
           ASC "TEMPO       SONG NAME!!"00
           LDY #$00
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "  "00
           LDA FILETBL,Y
           BEQ $13F3
           JSR COUT
-          JSR OUTPUT
+          JSR OUTSTR
           ASC "  "00
           INY
           JSR PRFILNAM
@@ -1102,7 +1355,7 @@ INITnDIE  LDA #$00
           BRK $00
           BRK $00
           BRK $00
-          BRK $00        ; 14AC-15CC ZEROED AT STARTUP
+DISKNAME  BRK $00        ; 14AC-15CC ZEROED AT STARTUP
           BRK $00
           BRK $00
           BRK $00

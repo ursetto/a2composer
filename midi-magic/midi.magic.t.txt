@@ -1,5 +1,5 @@
-# TFBD (263 records total)
-# 2x section (56 records)
+# TFBD (265 records total)
+# 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
 ASC +$0062, $0C
@@ -56,6 +56,8 @@ DW  +$0972, $0E
 DB  +$0980, $54
 DB  +$09D4, $54
 DB  +$0A28, $0E
+28 00 00000CAC 0020
+28 00 00000CCC 0100
 # 4x section (83 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
@@ -69,7 +71,7 @@ EQU  $0000, SONGPTR
 EQU  $4038, TEMPO
 LAB +$0224, :ADD20         # 0002
 LAB +$021C, CURSONGIDX         # 0002
-LAB +$0CCC, FILETBL         # 0002
+LAB +$0CCC, FILETBL         # 0100
 LAB +$0BF6, INITnDIE         # 0002
 LAB +$0031, :ZEROTABLES         # 0002
 LAB +$08AD, :STRS         # 0009
@@ -105,7 +107,7 @@ LAB +$0617, NEXTSONGP         # 0003
 LAB +$061F, NEXTSONG         # 0003
 EQU  $03EA, RECONNECTIO
 EQU  $000B, ISPLAYING
-LAB +$0CAC, DISKNAME         # 0002
+LAB +$0CAC, DISKNAME         # 0020
 LAB +$02B5, ANIMATE         # 0003
 LAB +$032D, NEXTSONGBYTE         # 0002
 LAB +$0248, :next         # 0002

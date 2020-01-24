@@ -1,4 +1,4 @@
-# TFBD (217 records total)
+# TFBD (221 records total)
 # 2x section (51 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -51,7 +51,7 @@ ASC +$0BE4, $03
 DB  +$0A36, $C0
 DB  +$0AF6, $C0
 DB  +$0913, $01
-# 4x section (77 records)
+# 4x section (78 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -129,7 +129,8 @@ LAB +$0924, :ret         # 0001
 LAB +$0914, :second         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002
-# 6x section (89 records)
+LAB +$062B, CLEARROLL         # 0002
+# 6x section (92 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -185,12 +186,12 @@ COM +$0A38, address index table
 COM +$01B5, Y=hgr line # to clr
 COM +$01AA, clr last 2 HGR lines
 COM +$063E, white
-COM +$062B, HPLOT 70,49 TO 
+COM +$062B, HPLOT 70,49 TO
 COM +$062D, 195,49
 COM +$063C, 18*7=126 pixels
 COM +$0631, 10*7=70
-COM +$064E, $30 times
-COM +$0649, draw something
+COM +$064E, to white
+COM +$0649, scroll $2A times
 COM +$0656, full screen HGR
 COM +$065C, back to text mode
 COM +$0170, is this ever called?
@@ -219,3 +220,6 @@ COM +$093B, $06-07: prev addr
 COM +$0937, $08: curline
 COM +$093F, *prev = *this
 COM +$094B, *this = next line
+COM +$064C, to clear whole roll
+COM +$0643, draw top line
+COM +$08FC, what's in zp $0A ?

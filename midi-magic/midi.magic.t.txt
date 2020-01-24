@@ -1,4 +1,4 @@
-# TFBD (255 records total)
+# TFBD (259 records total)
 # 2x section (56 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -140,7 +140,7 @@ LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (116 records)
+# 6x section (120 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -236,8 +236,8 @@ COM +$08FC, #00 or #FF
 COM +$0297, skip next inst
 COM +$08F8, index into PIXMASK
 COM +$08F4, index into HGR line
-COM +$0900, 7 pixel pixmask
-COM +$0908, next 7 pixel mask
+COM +$0900, OR in 2 mask bytes
+COM +$0903, per note; each note
 COM +$0A28, Appears unused as
 COM +$0A29, MASKIDX len is $54.
 COM +$0980, Index into PIXMASK
@@ -248,8 +248,8 @@ COM +$09D4, Index into HGR byte
 COM +$09D5, based on note num
 COM +$09D7, These are in groups
 COM +$09D8, of 7 pixels
-COM +$090C, each note touches
-COM +$090E, 2 adjacent bytes
+COM +$0905, is 2 pixels wide
+COM +$0907, (white) so 2 bytes
 COM +$0986, Repeats every
 COM +$0987, 7 notes
 COM +$0966, 2 adjacent bytes
@@ -257,3 +257,7 @@ COM +$0968, 1 DW per note
 COM +$096A, 2 white pixels
 COM +$096C, per note
 COM +$0917, turn note off
+COM +$0908, hold 7 notes
+COM +$090B, (14 pixel bits)
+COM +$0919, as above, using
+COM +$091B, AND mask

@@ -1,4 +1,4 @@
-# TFBD (250 records total)
+# TFBD (255 records total)
 # 2x section (56 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -51,8 +51,8 @@ ASC +$0BE4, $03
 DB  +$0A36, $C0
 DB  +$0AF6, $C0
 DB  +$0913, $01
-DB  +$0964, $0E
-DB  +$0972, $0E
+21 00 00000964 000E
+21 00 00000972 000E
 DB  +$0980, $54
 DB  +$09D4, $54
 DB  +$0A28, $0E
@@ -131,16 +131,16 @@ LAB +$017D, SETUP2         # 0002
 LAB +$08D7, DRAWNOTE         # 0001
 LAB +$08E2, DRAWROLL         # 0001
 LAB +$0924, :ret         # 0001
-LAB +$0914, :second         # 0003
+LAB +$0914, :off         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002
 LAB +$062B, CLEARROLL         # 0002
-LAB +$0964, PIXMASK         # 0001
-LAB +$0972, PIXMASK2         # 0001
+LAB +$0964, PIXMASK         # 000E
+LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (111 records)
+# 6x section (116 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -219,7 +219,7 @@ COM +$0952, 126 pixels wide
 COM +$0925, Scroll the area
 COM +$0927, from 70,49-195,90
 COM +$092A, down by 1 pixel
-COM +$0964, data
+COM +$0964, mask ORed into
 COM +$0947, x=70
 COM +$0954, copy line above
 COM +$0956, to line below
@@ -252,3 +252,8 @@ COM +$090C, each note touches
 COM +$090E, 2 adjacent bytes
 COM +$0986, Repeats every
 COM +$0987, 7 notes
+COM +$0966, 2 adjacent bytes
+COM +$0968, 1 DW per note
+COM +$096A, 2 white pixels
+COM +$096C, per note
+COM +$0917, turn note off

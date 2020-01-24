@@ -158,8 +158,12 @@ qrs2midi.py
 Driver disassembly
 ------------------
 zp $00 : SONGPTR -- points to current byte in song
+zp $04,$05: temp used for HGR line pointer
+zp $06,$07: temp used for HGR line pointer
+zp $08: temp used for current HGR line number
 zp $09 : FILENAME points to current filename (apparently, the character after the first ^). CURSONG*32.
     the first byte is also stored in the SSC_STATUS register (?!)
+zp $0A : unknown, affects roll display. Set to #$00 when tempo is updated. Set to #$FF at $0AAA.
 zp $0B : ISPLAYING bool: 0 if no song playing, $FF if playing (test is for 0)
 $303 : CURSONG whatever's here, it's multiplied by 32 and stored in $09. The currently playing song, I think.
 $305 : seems to hold the last key pressed, set to 0 when key is handled.

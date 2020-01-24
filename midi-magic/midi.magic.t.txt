@@ -1,4 +1,4 @@
-# TFBD (246 records total)
+# TFBD (250 records total)
 # 2x section (56 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -140,7 +140,7 @@ LAB +$0972, PIXMASK2         # 0001
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (107 records)
+# 6x section (111 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -248,3 +248,7 @@ COM +$09D4, Index into HGR byte
 COM +$09D5, based on note num
 COM +$09D7, These are in groups
 COM +$09D8, of 7 pixels
+COM +$090C, each note touches
+COM +$090E, 2 adjacent bytes
+COM +$0986, Repeats every
+COM +$0987, 7 notes

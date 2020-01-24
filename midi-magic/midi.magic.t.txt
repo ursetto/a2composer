@@ -1,4 +1,4 @@
-# TFBD (189 records total)
+# TFBD (217 records total)
 # 2x section (51 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -51,7 +51,7 @@ ASC +$0BE4, $03
 DB  +$0A36, $C0
 DB  +$0AF6, $C0
 DB  +$0913, $01
-# 4x section (72 records)
+# 4x section (77 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -118,13 +118,18 @@ LAB +$01B5, CLRLINE         # 0003
 LAB +$01AA, CLRBOTTOM         # 0002
 LAB +$0640, :1         # 0002
 LAB +$0649, :1         # 0003
-LAB +$0925, DRAWTHING         # 0002
+LAB +$0925, SCROLLROLL         # 0002
 LAB +$022B, PLAY         # 0003
 LAB +$0236, PLAY2         # 0003
 LAB +$016C, SETUP         # 0001
 LAB +$017D, SETUP2         # 0002
-LAB +$08D7, DRAWTHING2         # 0001
-# 6x section (66 records)
+LAB +$08D7, DRAWNOTE         # 0001
+LAB +$08E2, DRAWROLL         # 0001
+LAB +$0924, :ret         # 0001
+LAB +$0914, :second         # 0003
+LAB +$0954, :1         # 0002
+LAB +$0939, :2         # 0002
+# 6x section (89 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -190,4 +195,27 @@ COM +$0656, full screen HGR
 COM +$065C, back to text mode
 COM +$0170, is this ever called?
 COM +$08D7, DRAW SOMETHING 
-COM +$08D8, BASED ON A REG
+COM +$08D8, (maybe note num?)
+COM +$08E2, main entry point
+COM +$0911, always
+COM +$08F3, A input is index
+COM +$08DA, Accept A = 35-101
+COM +$08DC, and rescale to
+COM +$08DE, A = 0-66
+COM +$08E7, HGR x=70 y=Y
+COM +$08E0, HGR y=49
+COM +$0952, 126 pixels wide
+COM +$0925, Scroll the area
+COM +$0927, from 70,49-195,90
+COM +$092A, down by 1 pixel
+COM +$0964, data
+COM +$0947, x=70
+COM +$0954, copy line above
+COM +$0956, to line below
+COM +$095F, while line >= 49
+COM +$095B, line--
+COM +$0939, $04-05: this addr
+COM +$093B, $06-07: prev addr
+COM +$0937, $08: curline
+COM +$093F, *prev = *this
+COM +$094B, *this = next line

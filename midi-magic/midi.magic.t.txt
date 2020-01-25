@@ -1,4 +1,4 @@
-# TFBD (312 records total)
+# TFBD (320 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (88 records)
+# 4x section (92 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -147,7 +147,11 @@ LAB +$035F, :loop         # 0002
 LAB +$02E8, SEND         # 0001
 LAB +$035D, ALLOFF         # 0002
 LAB +$02EF, SEND2         # 0002
-# 6x section (166 records)
+EQU  $0307, NOTENUM
+EQU  $0308, NOTEVEL
+LAB +$0282, NOTEMSG         # 0001
+LAB +$0299, :off         # 0002
+# 6x section (170 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -285,7 +289,7 @@ COM +$0202, DRAWROLL white pxl
 COM +$0243, decreases tempo val
 COM +$034E, stop song on ESC
 COM +$034A, ESC
-COM +$02A8, might be note off
+COM +$08FE, colors below might be flipped
 COM +$0344, critical SSC section
 COM +$036E, 127 times
 COM +$02E9, preserves A,X,Y
@@ -313,4 +317,8 @@ COM +$0274, the tick delay
 COM +$0283, note ON
 COM +$0295, vel 64
 COM +$0299, vel 0 (note off)
-COM +$028F, send byte
+COM +$028F, send byte in A
+COM +$028C, temp -- note num
+COM +$02AA, 00=off, FF=note on
+COM +$0293, note>127 is off
+COM +$029E, send byte in A

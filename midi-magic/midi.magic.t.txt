@@ -1,4 +1,4 @@
-# TFBD (285 records total)
+# TFBD (306 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (86 records)
+# 4x section (87 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -145,12 +145,13 @@ LAB +$0A28, UNUSEDX         # 0001
 LAB +$0352, :continue         # 0003
 LAB +$035F, :loop         # 0002
 LAB +$02E8, SEND         # 0001
-# 6x section (141 records)
+LAB +$035D, ALLOFF         # 0002
+# 6x section (161 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
 MX  +$0859, %11
-COM +$0191, 115200 8N1
+COM +$0191, 115200 8M1 (?)
 COM +$0198, SONGPTR
 COM +$021C, Y=$303*32
 COM +$0BFC, BAD SECTORS TO END
@@ -284,6 +285,26 @@ COM +$0243, decreases tempo val
 COM +$034E, stop song on ESC
 COM +$034A, ESC
 COM +$02A8, might be note off
-COM +$0344, why?
+COM +$0344, critical SSC section
 COM +$036E, 127 times
 COM +$02E9, preserves A,X,Y
+COM +$0306, always
+COM +$0312, send 8 bits?
+COM +$02EB, X,Y unused
+COM +$02EF, A -> $09
+COM +$032A, just a delay?
+COM +$018C,  MARK parity?
+COM +$035D, send 90 7F 00
+COM +$035F, thru 90 01 00
+COM +$0326, reset, maybe
+COM +$0361, ie NOTE ON VEL 0
+COM +$0364, for all KEYs
+COM +$0365, on CHAN 0
+COM +$0358, why twice
+COM +$02F5, this oddly seems to
+COM +$02F7, send 1 bit at a time
+COM +$02FA, by frobbing an xmit
+COM +$02FD, line (TX or DTR?)
+COM +$0301, COMMAND bit 3 is
+COM +$0302, underdocumented so
+COM +$0304, hard to be sure

@@ -1,4 +1,4 @@
-# TFBD (320 records total)
+# TFBD (323 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (92 records)
+# 4x section (94 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -151,7 +151,9 @@ EQU  $0307, NOTENUM
 EQU  $0308, NOTEVEL
 LAB +$0282, NOTEMSG         # 0001
 LAB +$0299, :off         # 0002
-# 6x section (170 records)
+LAB +$02AA, :draw         # 0002
+LAB +$02DD, ENDMSG         # 0002
+# 6x section (171 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -322,3 +324,4 @@ COM +$028C, temp -- note num
 COM +$02AA, 00=off, FF=note on
 COM +$0293, note>127 is off
 COM +$029E, send byte in A
+COM +$0282, send note on or off

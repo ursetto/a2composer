@@ -1,4 +1,4 @@
-# TFBD (306 records total)
+# TFBD (312 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (87 records)
+# 4x section (88 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -146,7 +146,8 @@ LAB +$0352, :continue         # 0003
 LAB +$035F, :loop         # 0002
 LAB +$02E8, SEND         # 0001
 LAB +$035D, ALLOFF         # 0002
-# 6x section (161 records)
+LAB +$02EF, SEND2         # 0002
+# 6x section (166 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -303,8 +304,13 @@ COM +$0365, on CHAN 0
 COM +$0358, why twice
 COM +$02F5, this oddly seems to
 COM +$02F7, send 1 bit at a time
-COM +$02FA, by frobbing an xmit
+COM +$02FA, by frobbing some
 COM +$02FD, line (TX or DTR?)
 COM +$0301, COMMAND bit 3 is
 COM +$0302, underdocumented so
 COM +$0304, hard to be sure
+COM +$0274, the tick delay
+COM +$0283, note ON
+COM +$0295, vel 64
+COM +$0299, vel 0 (note off)
+COM +$028F, send byte

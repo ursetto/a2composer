@@ -20,6 +20,7 @@ Fortunately a full copy of COMPOSER is available on the backup disk /DOUBLEDOS.
 The intent of this project is to recover as much data as possible, decode the file formats,
 and convert them to MIDI files.
 
+A MIDI converter has been implemented in [qrs2midi.py](qrs2midi.py).
 
 Files
 -----
@@ -48,6 +49,7 @@ Files in this repository
 
 - `COMPOSER2.BAS`: Version 2 of COMPOSER.
 - `COMPOSER6.BAS`: Version 6 (latest) of COMPOSER.
+- `qrs2midi.py`: Translate piano roll files to MIDI.
 
 Entry points
 ------------
@@ -69,15 +71,15 @@ Info files are used only by COMPOSER and are not necessary to decode the music. 
 
 The header on the demo files consists of 64 zero bytes ($4000 - $403F in memory).
 
-We know tempo is stored at $4038. Without looking at the code, my guess is these
-locations are used for temporary variables or parameter passing. A few of my files
-were saved with some data from $5000-$503F; I can't tell if this is just BASIC file
-data that overlapped the music file, other corruption, or whether the driver modified 
-it while playing.
+We know tempo is stored at $4038 (but is zero in the file). No other
+locations in this header appear to be used, even for temporary storage. A few
+of my files were saved with some data from $5000-$503F; I can't tell
+if this is just BASIC file data that overlapped the music file, other
+corruption, or whether the driver modified it while playing.
 
 ### Title
 
-All songs playable by the official player begin with `^`. It appears the second character has meaning, perhaps the tempo. The driver always does a 'BLOAD ^' followed by the rest of the filename.
+All songs playable by the official player begin with `^`. It appears the second character is the tempo (AND #$7F, since it uses high-ASCII). The driver always does a 'BLOAD ^' followed by the rest of the filename stored in the filename table.
 
 ### Data
 
@@ -109,6 +111,12 @@ Note range isn't that high. Observed low of $24 and high of $60 (so note off $A4
 
 "DO YOU THINK I'M SEXY" has some assembly language garbage at the end that looks like a tight hardware timing loop. It appears that offset $20FC and later got mixed up with another file.
 
+Missing sectors
+---------------
+
+The driver on my disk is corrupt and, as far as I can tell, is probably
+missing the piece which loads filenames from the catalog into the
+disk name and filename table. This could be reimplemented.
 
 Notes
 -----
@@ -150,13 +158,15 @@ then NULL out the linked list pointer.
 
 COMPOSER4 actually writes 00 00 00 to the end of file location in memory at startup time (the address is hardcoded). Obviously, this bit me at the time, but I didn't know how to properly fix it. I'm guessing the music file clobbered the last pointer at some point, then I saved the program. I don't know how the program length was corrupted though.
 
-MIDI conversion
----------------
-
-qrs2midi.py
-
 Driver disassembly
 ------------------
+
+Driver was disassembled using TFBD by Ferox and its Merlin-compatible
+source files are in the [midi-magic](midi-magic) subdir along with
+commentary. The file `tasks.py` will pull source files from my working disk
+and commit them to git, and `tfbd.py` will decode TFBD template files to text
+for storage in git.
+
 zp $00 : SONGPTR -- points to current byte in song
 zp $04,$05: temp used for HGR line pointer
 zp $06,$07: temp used for HGR line pointer
@@ -178,13 +188,14 @@ $305 : seems to hold the last key pressed, set to 0 when key is handled.
 
 0305 : might hold last key pressed.
 
-
 750-777, 7d0-7f7 : The last two lines of the screen, appear to be
 animated with '*' or '.' in each column in some way. Initialized to all '.'.
 Probably simulates a piano roll. See $0AB5 (ANIMATE) which oddly has no call to it.
 
-Tempo can range from 32 to 159 (at least, as input through arrow keys).
-
+Tempo can range from 32 to 159 (a 7-bit range of $7F).
+Right arrow DECREASES tempo, implying "tempo" is actually a delay value.
+This lines up with tempo display, which moves right on screen as
+tempo value gets smaller.
 
 ### Recovery of MIDI-MAGIC
 

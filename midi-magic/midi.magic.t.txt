@@ -1,4 +1,4 @@
-# TFBD (277 records total)
+# TFBD (285 records total)
 # 2x section (58 records)
 ASC +$0044, $01
 ASC +$0045, $14
@@ -58,7 +58,7 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (83 records)
+# 4x section (86 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -142,7 +142,10 @@ LAB +$0972, PIXMASK2         # 000E
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
-# 6x section (136 records)
+LAB +$0352, :continue         # 0003
+LAB +$035F, :loop         # 0002
+LAB +$02E8, SEND         # 0001
+# 6x section (141 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -278,4 +281,9 @@ COM +$0215, "note" on bottom
 COM +$0216, 2 lines of scrn
 COM +$0202, DRAWROLL white pxl
 COM +$0243, decreases tempo val
+COM +$034E, stop song on ESC
+COM +$034A, ESC
 COM +$02A8, might be note off
+COM +$0344, why?
+COM +$036E, 127 times
+COM +$02E9, preserves A,X,Y

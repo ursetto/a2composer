@@ -10,6 +10,7 @@ def j(*L): return " ".join(L)
 disk = "../../../System 6_0_4 jim.hdv"
 prefix = "TFBD/ASM"
 filename = 'midi.magic'
+origbinfile = 'MIDI-MAGIC.BIN'
 
 fns = []
 for ext in '.s', '.e.s', '.x.s', '.t', '.t.txt':
@@ -66,4 +67,7 @@ def push(c):
             # c.run(f"./ac -pt {qq(disk, dst, fn)}")
             c.run(qq("./ac", "-pt", disk, dst, fn))
 
-
+@task
+def build(c):
+    c.run(f'merlin32 -V /usr/local/opt/merlin32/lib {filename}.all.s')
+    c.run(f'cmp {filename}.all {origbinfile}')

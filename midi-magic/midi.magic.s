@@ -128,9 +128,9 @@ SETUP2    LDA #$13
           JSR SUMDELAY
           LDA #$11
           STA SSC_TDREG
-          LDA #$0A
+          LDA #$0A       ;  MARK parity?
           STA SSC_COMMAND
-          LDA #$00       ; 115200 8N1
+          LDA #$00       ; 115200 8M1 (?)
           STA SSC_CONTROL
           LDA #$3F
           STA $00        ; SONGPTR
@@ -181,22 +181,22 @@ DECTEMPO  LDA TEMPO
 
 UPDATETEMPO JSR CURSONGIDX
           LDA TEMPO
-          ORA #$80
-          STA FILETBL,Y
+          ORA #$80       ; make into ascii char
+          STA FILETBL,Y  ; for filename
           JSR CLRBOTTOM
           LDA #$00
-          STA $0A
+          STA $0A        ; DRAWROLL white pxl
           LDA TEMPO
           SEC
           SBC #$20
-          EOR #$FF
-          AND #$7F
-          LSR
+          EOR #$FF       ; seems to convert
+          AND #$7F       ; tempo 32-159 to
+          LSR            ; 63-0 (reversed)
           PHA
-          LDY #$BF
-          JSR DRAWROLL
-          PLA
-          LDY #$BE
+          LDY #$BF       ; reuse drawroll to
+          JSR DRAWROLL   ; show tempo as
+          PLA            ; "note" on bottom
+          LDY #$BE       ; 2 lines of scrn
           JSR DRAWROLL
           RTS
 
@@ -219,7 +219,7 @@ PLAY2     LDA KBD
           BPL :nokey
           STA LASTKEY    ; save last keypress?
           CMP #$95       ; right arrow key
-          BNE :next
+          BNE :next      ; decreases tempo val
           JSR DECTEMPO
 :next     CMP #$88       ; left arrow key
           BNE :nokey
@@ -230,7 +230,7 @@ PLAY2     LDA KBD
 
           JSR NEXTSONGBYTE
           CMP #$FF
-          BNE $0A82
+          BNE NOTEMSG
           JSR NEXTSONGBYTE
           BEQ PLAY2
           CMP #$FF
@@ -240,40 +240,40 @@ PLAY2     LDA KBD
           BNE PLAY2
           STA $0306
           LDA TEMPO
-          JSR SUMDELAY
+          JSR SUMDELAY   ; the tick delay
           JSR SCROLLROLL
           DEC $0306
           BNE $0A71
           JMP PLAY2
 
-          PHA
-          LDA #$90
-          JSR $0AEF
+NOTEMSG   PHA            ; send note on or off
+          LDA #$90       ; note ON
+          JSR SEND2
           PLA
           PHA
           AND #$7F
-          STA $0307
-          JSR $0AEF
+          STA NOTENUM    ; temp -- note num
+          JSR SEND2      ; send byte in A
           PLA
-          BMI $0A99
-          LDA #$40
+          BMI :off       ; note>127 is off
+          LDA #$40       ; vel 64
           BNE $0A9B      ; skip next inst
+:off      LDA #$00       ; vel 0 (note off)
+          STA NOTEVEL
+          JSR SEND2      ; send byte in A
           LDA #$00
-          STA $0308
-          JSR $0AEF
-          LDA #$00
-          LDX $0308
-          BEQ $0AAA
+          LDX NOTEVEL
+          BEQ :draw
           LDA #$FF
-          STA $0A
-          LDA $0307
+:draw     STA $0A        ; 00=off, FF=note on
+          LDA NOTENUM
           JSR DRAWNOTE
-          JMP $0ADD
+          JMP ENDMSG
 
 ANIMATE   LDA $0309
           SEC
           SBC #$1C
-          BMI $0ADD
+          BMI ENDMSG
           ROR
           PHP
           ROL
@@ -281,45 +281,45 @@ ANIMATE   LDA $0309
           TAY
           LDA #$AE       ; '.'
           LDX #$80
-          CPX $0308
+          CPX NOTEVEL
           BEQ $0AD2
-          LDX $0307
+          LDX NOTENUM
           BEQ $0AD2
           LDA #$AA       ; '*'
           PLP
           BCC $0ADA
           STA $0750,Y    ; 23RD TEXT LINE
-          BCS $0ADD
+          BCS ENDMSG
           STA $07D0,Y    ; 24TH TEXT LINE
-          LDY #$00
-          STY $0308
-          STY $0307
+ENDMSG    LDY #$00
+          STY NOTEVEL
+          STY NOTENUM
           JMP PLAY2
 
-          PHA
-          LDA #$0A
-          JSR SUMDELAY
+SEND      PHA
+          LDA #$0A       ; preserves A,X,Y
+          JSR SUMDELAY   ; X,Y unused
           PLA
-          STA $09
+SEND2     STA $09        ; A -> $09
           TXA
           PHA
           TYA
           PHA
-          LDX #$08
-          STX SSC_COMMAND
-          JSR $0B2A
-          LDA $09
+          LDX #$08       ; this oddly seems to
+          STX SSC_COMMAND ; send 1 bit at a time
+          JSR $0B2A      ; by frobbing some
+          LDA $09        ; line (TX or DTR?)
           LDY #$07
-          LSR
-          BCC $0B08
-          LDX #$00
-          BEQ $0B0B
+          LSR            ; COMMAND bit 3 is
+          BCC $0B08      ; underdocumented so
+          LDX #$00       ; hard to be sure
+          BEQ $0B0B      ; always
           LDX #$08
           NOP
           STX SSC_COMMAND
           JSR $0B2A
           DEY
-          BPL $0B01
+          BPL $0B01      ; send 8 bits?
           NOP
           NOP
           NOP
@@ -332,10 +332,10 @@ ANIMATE   LDA $0309
           PLA
           TAX
           LDA $09
-          STA SSC_STATUS
+          STA SSC_STATUS ; reset, maybe
           RTS
 
-          BIT $00
+          BIT $00        ; just a delay?
           RTS
 
 NEXTSONGBYTE INC $00     ; A=($00++)
@@ -354,28 +354,28 @@ SUMDELAY  SEC            ; loop x+(x-1)+...+1 times
           BNE :outer
           RTS
 
-          SEI
+          SEI            ; critical SSC section
           LDA KBD
           AND #$7F
-          CMP #$1B
-          BNE $0B52
-          LDA #$00
+          CMP #$1B       ; ESC
+          BNE :continue
+          LDA #$00       ; stop song on ESC
           STA $0B
-          STA KBDSTROBE
-          JSR $0B5D
-          JSR $0B5D
+:continue STA KBDSTROBE
+          JSR ALLOFF
+          JSR ALLOFF     ; why twice
           CLI
           RTS
 
-          LDY #$7F
-          LDA #$90
-          JSR $0AE8
-          TYA
-          JSR $0AE8
+ALLOFF    LDY #$7F       ; send 90 7F 00
+:loop     LDA #$90       ; thru 90 01 00
+          JSR SEND       ; ie NOTE ON VEL 0
+          TYA            ; for all KEYs
+          JSR SEND       ; on CHAN 0
           LDA #$00
-          JSR $0AE8
+          JSR SEND
           DEY
-          BNE $0B5F
+          BNE :loop      ; 127 times
           RTS
 
 GETKEY    STA KBDSTROBE
@@ -430,7 +430,7 @@ MENU      JSR CROUT
           ASC "     A ... PLAY ALL SONGS!     R ... RE"
           ASC "PEAT LAST SONG!     I ... INSTRUCTIONS!"
           ASC "!!     SELECTION --> "
-          ASC 7F8800
+          HEX 7F8800
           RTS
 
 PRFILNAM  LDA FILETBL,Y
@@ -498,14 +498,14 @@ CLEARROLL LDY #$31       ; HPLOT 70,49 TO
           STA $07
           LDY #$12       ; 18*7=126 pixels
           LDA #$7F       ; white
-:plot     STA ($06),Y
+:1        STA ($06),Y
           DEY
-          BPL :plot      ; draw top line
+          BPL :1         ; draw top line
           LDA #$29
           STA $02
-:scroll   JSR SCROLLROLL ; scroll $2A times
+:1        JSR SCROLLROLL ; scroll $2A times
           DEC $02        ; to clear whole roll
-          BPL :scroll    ; to white
+          BPL :1         ; to white
           STA TXTCLR
           STA HIRES
           STA MIXCLR     ; full screen HGR
@@ -592,9 +592,9 @@ BLOADCMD  LDA :STRS,Y
           ASC ": "00
 DRAWNOTE  SEC            ; DRAW SOMETHING 
           SBC #$23       ; (maybe note num?)
-          BMI DRAWEND    ; Accept A = 35-100
+          BMI :ret       ; Accept A = 35-100
           CMP #$42       ; and rescale to
-          BCS DRAWEND    ; A = 0-65
+          BCS :ret       ; A = 0-65
           LDY #$31       ; HGR y=49
 DRAWROLL  PHA            ; main entry point
           LDA HGRLO,Y
@@ -611,7 +611,7 @@ DRAWROLL  PHA            ; main entry point
           LDA MASKIDX,X  ; index into PIXMASK
           TAX
           BIT $0A        ; #00 or #FF
-          BMI :off
+          BMI :off       ; colors below might be flipped
           LDA PIXMASK,X  ; OR in 2 mask bytes
           ORA ($06),Y    ; per note; each note
           STA ($06),Y    ; is 2 pixels wide
@@ -621,7 +621,7 @@ DRAWROLL  PHA            ; main entry point
           ORA ($06),Y
           STA ($06),Y
           CLC
-          BCC DRAWEND    ; always
+          BCC :ret       ; always
           DB $00
 :off      LDA PIXMASK2,X
           AND ($06),Y    ; turn note off
@@ -631,7 +631,7 @@ DRAWROLL  PHA            ; main entry point
           INY
           AND ($06),Y
           STA ($06),Y
-DRAWEND   RTS
+:ret      RTS
 
 SCROLLROLL LDY #$5A      ; Scroll the area
           LDA HGRLO,Y    ; from 70,49-195,90

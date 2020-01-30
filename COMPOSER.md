@@ -41,7 +41,7 @@ Recovery
 - COMPOSER6.BAS was recovered from /DOUBLEDOS, but was a slightly earlier (non-working) version.
   We recovered it by repairing the file length and setting last line pointer to NULL. See Notes below.
 - COMPOSER3 and COMPOSER4 were also recovered by repairing the files. Note that COMPOSER4 contains what looks like self-repairing code to fix this at runtime!
-- MIDI-MAGIC looks like it has bad sectors ($00 bytes) from $0BFE - $0DFF, in the middle of code.
+- MIDI-MAGIC has bad sectors ($00 bytes) from $0BFE - $0DFF, in the middle of code. Much is actually zeroed data space, so under $100 bytes of code were lost, which obtain the song list from disk.
 - MIDIMAGIC (from /DOUBLEDOS), is identical to MIDI-MAGIC until $0A00 (and truncated there).
 
 Files in this repository
@@ -50,14 +50,16 @@ Files in this repository
 - `COMPOSER2.BAS`: Version 2 of COMPOSER.
 - `COMPOSER6.BAS`: Version 6 (latest) of COMPOSER.
 - `qrs2midi.py`: Translate piano roll files to MIDI.
+- `midi-magic/`: Disassembly of MIDI-MAGIC driver.
 
 Entry points
 ------------
 
-These are called to play a song.
+These are called from BASIC to play a song. Their actual meaning
+can be seen in the disassembly output.
 
-$097D
-$0A36
+    $097D
+    $0A36
 
 File format
 -----------
@@ -71,22 +73,26 @@ Info files are used only by COMPOSER and are not necessary to decode the music. 
 
 The header on the demo files consists of 64 zero bytes ($4000 - $403F in memory).
 
-We know tempo is stored at $4038 (but is zero in the file). No other
-locations in this header appear to be used, even for temporary storage. A few
-of my files were saved with some data from $5000-$503F; I can't tell
-if this is just BASIC file data that overlapped the music file, other
-corruption, or whether the driver modified it while playing.
+We know tempo is stored at runtime at $4038 (but is zero in the file). No other
+locations in this header are used, even for temporary storage. A few
+of my files were saved with some data from $5000-$503F; probably 
+BASIC file data that overlapped the music file during a period
+where the BASIC program was improperly relocated.
 
 ### Title
 
-All songs playable by the official player begin with `^`. It appears the second character is the tempo (AND #$7F, since it uses high-ASCII). The driver always does a 'BLOAD ^' followed by the rest of the filename stored in the filename table.
+All songs playable by the official player begin with `^`. The second character is the tempo (AND #$7F, since it uses high-ASCII). The driver always does a 'BLOAD ^' followed by the rest of the filename stored in the filename table, starting from the byte after the tempo. Thus, songs are
+displayed with an extra space character in the song list.
 
 ### Data
 
 Official files start data with FF 0F. My files start with either FF 0F, FF 0A, FF 0F 00 (?), or FF 0A 00 depending
-on which version of COMPOSE generated them.  In practice I don't see any existing files with FF 0A 00 which is the signature of COMPOSER6. Furthermore, 00 is an illegal value.
+on which version of COMPOSE generated them.  In practice I don't see any existing files with FF 0A 00, which is the signature of COMPOSER6. Furthermore, 00 is an illegal value.
 
-These values don't correspond to MIDI messages. MIDI messages have no DURATION, just NOTE ON and OFF. Note on/off are 3 bytes and include a KEY byte and VELOCITY byte and CHANNEL. In particular, MIDI 0xFF is hard reset.  In fact, it's very strange that there's no VELOCITY or CHANNEL component, and that they chose to use DURATION, which implies a lot of bookkeeping and a list of recently used notes and remaining durations, rather than letting the MIDI hardware take care of it.
+These values don't correspond to MIDI messages. MIDI messages have no DURATION, just NOTE ON and OFF. MIDI Note on/off are 3 bytes and include a KEY byte and VELOCITY byte and CHANNEL. In particular, MIDI 0xFF is hard reset.  The piano roll files use a fixed velocity of 64, explicit delay values in ticks (FF tickval), and explicit note on and note off.
+
+`qrs2midi.py` implements a piano roll decoder and is the best
+place to see how this works.
 
 #### Data in COMPOSER
 
@@ -115,7 +121,7 @@ Missing sectors
 ---------------
 
 The driver on my disk is corrupt and, as far as I can tell, is probably
-missing the piece which loads filenames from the catalog into the
+missing just the piece which loads filenames from the catalog into the
 disk name and filename table. This could be reimplemented.
 
 Notes
@@ -173,7 +179,7 @@ zp $06,$07: temp used for HGR line pointer
 zp $08: temp used for current HGR line number
 zp $09 : FILENAME points to current filename (apparently, the character after the first ^). CURSONG*32.
     the first byte is also stored in the SSC_STATUS register (?!)
-zp $0A : unknown, affects roll display. Set to #$00 when tempo is updated. Set to #$FF at $0AAA. Seems to mean "turn note off" on roll.
+zp $0A : affects roll display. #$FF seems to mean NOTE ON, #$00 NOTE OFF.
 zp $0B : ISPLAYING bool: 0 if no song playing, $FF if playing (test is for 0)
 $303 : CURSONG whatever's here, it's multiplied by 32 and stored in $09. The currently playing song, I think.
 $305 : seems to hold the last key pressed, set to 0 when key is handled.
@@ -181,21 +187,44 @@ $305 : seems to hold the last key pressed, set to 0 when key is handled.
 12F6.13B5 ($C0) : hi  byte of HGR line index (lines 0-191)
 14ac : a CR-terminated string. may be populated near EOF in the bad sectors.
        Surmising this is "DEMO DISK FOR MIDI MAGIC" obtained by scanning catalog for
-       file beginning with "@".
-14cc-15cc : a 256-byte (table) containing 8 (?) 32-byte (?) entries.
-            Somewhere in here is the current filename.
-            This might be a list of all songs on disk.
+       file beginning with "@". It is terminated by $8D, but unlike the filename
+       table, $A0 padding is not required (but doesn't hurt).
+14cc-15cc : a 256-byte (table) containing 8 32-byte entries, 1 per song.
+ Each is the filename on disk without the first ^, padded with spaces,
+ terminated by CR ($8D) at byte 29. Since the first ^ is implied, filename
+ data is 30 bytes long. This matches a standard DOS 3.3 filename,
+ which is 30 bytes and space-padded. Note the CR *must* occur at byte 29 as
+ the catalog code is hardcoded to look 3 bytes past it for the next filename;
+ bytes 30 and 31 are ignored.
+ For example, ASC "^ PIANO ROLL" A0 A0 ... 8D. Byte 0 (the second char of
+ the full filename) is the file's tempo. 
+ Song scan terminates at the first 0 byte (at byte 1), or after 256 bytes.
 
 0305 : might hold last key pressed.
 
-750-777, 7d0-7f7 : The last two lines of the screen, appear to be
-animated with '*' or '.' in each column in some way. Initialized to all '.'.
-Probably simulates a piano roll. See $0AB5 (ANIMATE) which oddly has no call to it.
+750-777, 7d0-7f7 : The last two lines of the screen, animated
+with '*' or '.' in each column in some way. Initialized to all '.'.
+See $0AB5 (ANIMATE) which oddly has no call to it. I think this
+is vestigial debugging output, perhaps made visible by setting
+mixed text/HGR mode.
 
 Tempo can range from 32 to 159 (a 7-bit range of $7F).
 Right arrow DECREASES tempo, implying "tempo" is actually a delay value.
 This lines up with tempo display, which moves right on screen as
 tempo value gets smaller.
+
+All notes are sent at velocity 64. Note off is sent as NOTE ON + velocity 0,
+which the MIDI standard says is equivalent to NOTE OFF. (Some indications
+that NOTE OFF is less well supported anyway.)
+
+To send a byte, the code appears to frob the RTS line bit by bit, by
+toggling the command register $C08A from #$08 to #$00, which switches
+the transmit interrupt bits from Disabled (RTS high) to Disabled (RTS
+low). The meaning of the 2 transmit interrupt bits are described at
+https://sites.google.com/site/drjohnbmatthews/apple2/ssc -- official
+docs omit their definition. I believe this line is either pin 1 or 5
+on the //c, not sure which.
+
 
 ### Recovery of MIDI-MAGIC
 
@@ -209,6 +238,32 @@ track 4 is unreadable. Unfortunately there are no copies of this data elsewhere.
     T13,S03-09 contains deleted for missing COMPOSER stuff
     T08,S06-0A contains deleted for missing COMPOSER stuff (probably COMPOSER2)
     T04 appears destroyed. It contained MIDI-MAGIC and LOGO data.
+
+### Rewriting of MIDI-MAGIC
+
+  13FC: 60                        ; return from badlands without cataloging disk
+  14AC: A0 A8 C4 C9 D3 CB A0 CE 
+        C1 CD C5 A9 8D
+  14CC: DE A0 D0 C9 C1 CE CF A0 
+        D2 CF CC CC A0 A0 A0 A0
+        A0 A0 A0 A0 A0 A0 A0 A0
+        A0 A0 A0 A0 A0 8D 00 00   ; ASC "^ PIANO ROLL          "8D
+  14EC: DE A0 C1 D2 C1 C2 C5 D3
+        D1 D5 C5 A3 B1 A0 A0 A0
+        A0 A0 A0 A0 A0 A0 A0 A0
+        A0 A0 A0 A0 A0 8D 00 00   ; ASC "^ ARABESQUE#1         "8D
+BSAVE MFIX,A$13FC,L$200,D2
+
+CALL-151
+BLOAD MIDI-MAGIC
+BLOAD MFIX,D2
+CATALOG,D1
+833:2C
+836:2C           # avoid zeroing filename structures
+
+(DISK NAME)=@@@@@@@@@@@@@^ PIANO ROLL
+1 ...  PIANO ROLL
+2 ...            8
 
 Further information
 -------------------

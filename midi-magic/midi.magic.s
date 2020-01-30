@@ -430,7 +430,7 @@ MENU      JSR CROUT
           ASC "     A ... PLAY ALL SONGS!     R ... RE"
           ASC "PEAT LAST SONG!     I ... INSTRUCTIONS!"
           ASC "!!     SELECTION --> "
-          ASC ''8800
+          ASC 7F8800
           RTS
 
 PRFILNAM  LDA FILETBL,Y
@@ -498,14 +498,14 @@ CLEARROLL LDY #$31       ; HPLOT 70,49 TO
           STA $07
           LDY #$12       ; 18*7=126 pixels
           LDA #$7F       ; white
-:1        STA ($06),Y
+:plot     STA ($06),Y
           DEY
-          BPL :1         ; draw top line
+          BPL :plot      ; draw top line
           LDA #$29
           STA $02
-:1        JSR SCROLLROLL ; scroll $2A times
+:scroll   JSR SCROLLROLL ; scroll $2A times
           DEC $02        ; to clear whole roll
-          BPL :1         ; to white
+          BPL :scroll    ; to white
           STA TXTCLR
           STA HIRES
           STA MIXCLR     ; full screen HGR
@@ -592,9 +592,9 @@ BLOADCMD  LDA :STRS,Y
           ASC ": "00
 DRAWNOTE  SEC            ; DRAW SOMETHING 
           SBC #$23       ; (maybe note num?)
-          BMI :ret       ; Accept A = 35-100
+          BMI DRAWEND    ; Accept A = 35-100
           CMP #$42       ; and rescale to
-          BCS :ret       ; A = 0-65
+          BCS DRAWEND    ; A = 0-65
           LDY #$31       ; HGR y=49
 DRAWROLL  PHA            ; main entry point
           LDA HGRLO,Y
@@ -621,7 +621,7 @@ DRAWROLL  PHA            ; main entry point
           ORA ($06),Y
           STA ($06),Y
           CLC
-          BCC :ret       ; always
+          BCC DRAWEND    ; always
           DB $00
 :off      LDA PIXMASK2,X
           AND ($06),Y    ; turn note off
@@ -631,7 +631,7 @@ DRAWROLL  PHA            ; main entry point
           INY
           AND ($06),Y
           STA ($06),Y
-:ret      RTS
+DRAWEND   RTS
 
 SCROLLROLL LDY #$5A      ; Scroll the area
           LDA HGRLO,Y    ; from 70,49-195,90

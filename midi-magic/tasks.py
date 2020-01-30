@@ -71,3 +71,9 @@ def push(c):
 def build(c):
     c.run(f'merlin32 -V /usr/local/opt/merlin32/lib {filename}.all.s')
     c.run(f'cmp {filename}.all {origbinfile}')
+
+@task
+def mcat(c):
+    c.run('merlin32 -V /usr/local/opt/merlin32/lib mcat.s')
+    c.run('applecommander -d "midi magic remix.dsk" mcat')                  # kinda dumb -- ignore errors
+    c.run('./ac -p "midi magic remix.dsk" mcat B 0x13fc < mcat')

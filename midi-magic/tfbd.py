@@ -39,6 +39,9 @@ def decode_2x(f):
         elif rtype == 0x23:
             assert var_len == 0
             print(f"DA  +${offset:04X}, ${area_len:02X}")
+        elif rtype == 0x27:
+            assert var_len == 0
+            print(f"HEX +${offset:04X}, ${area_len:02X}")
         elif rtype == 0x28:
             assert var_len == 0
             print(f"DS  +${offset:04X}, ${area_len:02X}")

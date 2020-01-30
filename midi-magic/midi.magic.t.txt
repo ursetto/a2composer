@@ -123,8 +123,8 @@ LAB +$0A36, HGRLO         # 00C0
 LAB +$0AF6, HGRHI         # 00C0
 LAB +$01B5, CLRLINE         # 0003
 LAB +$01AA, CLRBOTTOM         # 0002
-LAB +$0640, :1         # 0002
-LAB +$0649, :1         # 0003
+LAB +$0640, :plot         # 0002
+LAB +$0649, :scroll         # 0003
 LAB +$0925, SCROLLROLL         # 0002
 LAB +$022B, PLAY         # 0003
 LAB +$0236, PLAY2         # 0003
@@ -132,7 +132,7 @@ LAB +$016C, SETUP         # 0001
 LAB +$017D, SETUP2         # 0002
 LAB +$08D7, DRAWNOTE         # 0001
 LAB +$08E2, DRAWROLL         # 0001
-LAB +$0924, :ret         # 0001
+LAB +$0924, DRAWEND         # 0001
 LAB +$0914, :off         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002

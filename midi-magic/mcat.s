@@ -1,9 +1,9 @@
 * CATALOG routines - Beneath Apple DOS, PDF page 109
 * File descriptive entry format - Beneath Apple DOS, PDF page 41
 
-* Issues: BRUN crashes (tries to read empty sector 11 0D);
-*         13FCG gives graphical corruption in monitor after
-*         second time (call 5116 works fine from BASIC)
+* Issues: BRUN crashes (tries to read empty sector 11 0D)
+* Note: clear $48 after RWTS call to avoid corrupting P flag and setting decimal mode,
+*       which will break everything (even ROM calls), when debugging with monitor.
 
 BUFPTR      equ $9600         ; buffer 3, typically unused
 IOB         equ $B7E8
@@ -106,6 +106,8 @@ READSECT
         ldy #<IOB
         lda #>IOB
         jsr RWTS
+        lda #$00            ; zero RWTS scratch byte to avoid trashing P flag
+        sta $48             ; via monitor... only needed when debugging
         bcc :end
         lda IOB_ERR
 :end    rts

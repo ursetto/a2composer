@@ -1,9 +1,10 @@
 * CATALOG routines - Beneath Apple DOS, PDF page 109
 * File descriptive entry format - Beneath Apple DOS, PDF page 41
 
-* Issues: BRUN crashes (tries to read empty sector 11 0D)
 * Note: clear $48 after RWTS call to avoid corrupting P flag and setting decimal mode,
 *       which will break everything (even ROM calls), when debugging with monitor.
+* Note: If calling via BRUN, use JMP REENTRY instead of RTS to return, as any use of COUT
+*       in BRUN code will break the capability to RTS thru DOS.
 
 BUFPTR      equ $9600         ; buffer 3, typically unused
 IOB         equ $B7E8
@@ -20,6 +21,7 @@ CAT_FDIDX   equ $0B           ; first file descriptive entry in catalog sector
 FD_TRACK    equ BUFPTR + 0    ; immediate index into FILEDESC
 FD_NAME     equ BUFPTR + 3    ; immediate index into FILEDESC
 RWTS        equ $03D9         ; or direct to $B7B5
+REENTRY     equ $03D0
 PRBYTE      equ $FDDA
 CROUT       equ $FD8E
 COUT        equ $FDED
@@ -35,6 +37,7 @@ FDIDX       equ $07           ; index to current file descriptive entry
 
 * Read VTOC sector.
 START
+        jsr CROUT
         lda #$11
         sta TRK
         lda #$00
@@ -66,6 +69,9 @@ READCAT
         beq :end                ; available entry -- end of catalog
         bmi :nxtfile            ; deleted file, ignore
         ldy #30
+        lda #" "
+        jsr COUT
+        jsr COUT
 :nxtchr lda FD_NAME,x           ; indexed from start of struct
         jsr COUT
         inx
@@ -80,7 +86,7 @@ READCAT
         tax
         stx FDIDX
         jmp :readname
-:end    rts
+:end    jmp REENTRY             ; instead of RTS to safely BRUN
 
 * Use standard DOS IOB which is already set up to
 * refer to the current slot and drive. We only need

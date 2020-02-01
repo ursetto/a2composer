@@ -77,3 +77,9 @@ def mcat(c):
     c.run('merlin32 -V /usr/local/opt/merlin32/lib mcat.s')
     c.run('applecommander -d "midi magic remix.dsk" mcat')                  # kinda dumb -- ignore errors
     c.run('./ac -p "midi magic remix.dsk" mcat B 0x13fc < mcat')
+
+@task
+def mmfix(c):
+    c.run('merlin32 -V /usr/local/opt/merlin32/lib mmfix.s')
+    c.run('applecommander -d "midi magic remix.dsk" mmfix')                  # kinda dumb -- ignore errors
+    c.run('./ac -p "midi magic remix.dsk" mmfix B 0x13fc < mmfix')

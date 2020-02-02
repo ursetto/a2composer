@@ -46,7 +46,7 @@ PRTRKSEC MAC
         FIN
         <<<
 
-        org $13FA
+        org $13F6
 
 INITCAT
 * Read VTOC sector.
@@ -177,4 +177,8 @@ READSECT
 
 DISKNAME  DS $20         ; 14AC-15CC ZEROED AT STARTUP
 FILETBL   DS $100        ; 8x 32 byte entries
-          DS $34         ; unused space
+
+* $34 bytes at end of MIDI-MAGIC are either unused or used for something
+* we don't need, so omit them. This saves 1 sector as the original was 4
+* bytes over.
+;          DS $34         ; unused space

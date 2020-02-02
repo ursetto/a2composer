@@ -1,5 +1,5 @@
-# TFBD (323 records total)
-# 2x section (58 records)
+# TFBD (327 records total)
+# 2x section (60 records)
 ASC +$0044, $01
 ASC +$0045, $14
 ASC +$0062, $0C
@@ -58,7 +58,9 @@ DB  +$09D4, $54
 DB  +$0A28, $0E
 DS  +$0CAC, $20
 DS  +$0CCC, $100
-# 4x section (94 records)
+DS  +$0BFC, $B0
+DS  +$0DCC, $34
+# 4x section (95 records)
 LAB +$085D, OUTSTR         # 0001
 LAB +$002C, START         # 0002
 LAB +$0160, CHOICES         # 000C
@@ -72,7 +74,7 @@ EQU  $4038, TEMPO
 LAB +$0224, :ADD20         # 0002
 LAB +$021C, CURSONGIDX         # 0002
 LAB +$0CCC, FILETBL         # 0100
-LAB +$0BF6, INITnDIE         # 0002
+LAB +$0BF6, INITCAT         # 0002
 LAB +$0031, :ZEROTABLES         # 0002
 LAB +$08AD, :STRS         # 0009
 LAB +$089B, BLOADCMD         # 0003
@@ -137,8 +139,8 @@ LAB +$0914, :off         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002
 LAB +$062B, CLEARROLL         # 0002
-LAB +$0964, PIXMASK         # 000E
-LAB +$0972, PIXMASK2         # 000E
+LAB +$0964, PIXMASKOFF         # 0002
+LAB +$0972, PIXMASKON         # 0002
 LAB +$0980, MASKIDX         # 0001
 LAB +$09D4, XINDEX         # 0001
 LAB +$0A28, UNUSEDX         # 0001
@@ -153,7 +155,8 @@ LAB +$0282, NOTEMSG         # 0001
 LAB +$0299, :off         # 0002
 LAB +$02AA, :draw         # 0002
 LAB +$02DD, ENDMSG         # 0002
-# 6x section (171 records)
+LAB +$0BFC, BADSECT         # 00B0
+# 6x section (172 records)
 ORG +$0000, $0800, L$0E00
 MX  +$0000, %11
 MX  +$0805, %11
@@ -162,7 +165,7 @@ COM +$0191, 115200 8M1 (?)
 COM +$0198, SONGPTR
 COM +$021C, Y=$303*32
 COM +$0BFC, BAD SECTORS TO END
-COM +$0CCC, MAYBE 32 BYTE ENTRIES
+COM +$0CCC, 8x 32 byte entries
 COM +$0033, OVERLAP
 COM +$0CAC, 14AC-15CC ZEROED AT STARTUP
 COM +$0076, keypress ends logo
@@ -275,7 +278,7 @@ COM +$090B, (14 pixel bits)
 COM +$0919, as above, using
 COM +$091B, AND mask
 COM +$0972, mask ANDed to
-COM +$0974, turn off notes
+COM +$0974, turn on notes
 COM +$0978, this is just
 COM +$097A, PIXMASK EOR #$7F
 COM +$01F8, make into ascii char
@@ -325,3 +328,4 @@ COM +$02AA, 00=off, FF=note on
 COM +$0293, note>127 is off
 COM +$029E, send byte in A
 COM +$0282, send note on or off
+COM +$0DCC, unused space

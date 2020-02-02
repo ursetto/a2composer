@@ -119,7 +119,7 @@ READCAT
         tax
         stx FDIDX
         jmp :readname           ; bne might work
-:end    jmp REENTRY             ; instead of RTS to safely BRUN
+:end    rts   ; jmp REENTRY             ; instead of RTS to safely BRUN
 
 * Handle @ file. Similar to nxtchr but reimplement due to fixed address.
 

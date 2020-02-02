@@ -4,6 +4,17 @@
 * Note: clear $48 after RWTS call to avoid corrupting P flag and setting decimal mode,
 *       which will break everything (even ROM calls), when debugging with monitor.
 
+* Note: this ungracefully executes a BRK on disk error.
+
+* Debugging output (track/sector read info) will appear on loading screen
+* because the entire catalog is reread when loading every file (MIDI-MAGIC $0E22). 
+* So debug should be disabled for production build, and maybe this odd reread
+* should be commented out.
+DEBUG       equ 0             ; debugging output
+
+* Although Wagner's Assembly Lines says file buffer 3 is typically 
+* unused, IOB_BUFR is actually $9600 at DOS boot time. It seems to
+* work fine though.
 BUFPTR      equ $9600         ; buffer 3, typically unused
 IOB         equ $B7E8
 IOB_VOL     equ IOB + 3
@@ -24,9 +35,6 @@ PRBYTE      equ $FDDA
 CROUT       equ $FD8E
 COUT        equ $FDED
 
-* Warning: Although Wagner's Assembly Lines says file buffer 3 is
-* typically unused, IOB_BUFR is actually $9600 at DOS boot time, 
-* implying it may be in use.
 FDIDX       equ $07           ; index to current file descriptive entry
 FNCNT       equ $08           ; chars processed in current filename
 YSAV        equ $09
@@ -35,17 +43,18 @@ FILETBL     equ $14CC
 
 ;; debugging -- print track, sector in A,Y
 PRTRKSEC MAC
+        DO DEBUG
         jsr PRBYTE      ; A=track
         tya
         jsr PRBYTE      ; Y=sector
         jsr CROUT
+        FIN
         <<<
-
 
         org $13FC
 
+INITCAT
 * Read VTOC sector.
-START
         ;; jsr CROUT
         lda #$11
         ldy #$00

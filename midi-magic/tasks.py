@@ -19,6 +19,7 @@ for ext in '.s', '.e.s', '.x.s', '.t', '.t.txt':
 
 @task
 def precheck(c):
+    """Verify git has no pending changes"""
     import sys
     cmd = c.run("git status -s -uno " + qq(*fns))
     if cmd.stdout:
@@ -26,11 +27,13 @@ def precheck(c):
 
 @task(precheck)
 def commit(c):
+    """Add and commit source files to git"""
     c.run("git add " + qq(*fns))
     c.run("git commit -uno -m 'Update asm files'")  # note: returns rc=1 if no changes
 
 @task(pre=[precheck], post=[commit])
 def pull(c):
+    """Pull source and template files from TFBD disk image"""
     print("Pulling from disk image...")
     for fn in fns:
         qsrc = q(prefix + '/' + fn)
@@ -52,6 +55,7 @@ def pull(c):
 
 @task
 def push(c):
+    """Do not use --- push source files to TFBD disk image"""
     # Note: pushing is currently pointless. TFBD does not use the .S files, only
     # the .T file, and we cannot decode/encode the .T file to change it.
     # .T file is type $5E, auxtype $8002 (in other words:
@@ -77,8 +81,8 @@ def buildorig(c):
     c.run(f'cmp {filename}.all {origbinfile}')
 
 @task
-def buildfixed(c):
-    """Build and load a patched binary, repairing the corrupt sectors."""
+def build(c):
+    """Build and upload MIDI-MAGIC REMIX, repairing the corrupt sectors."""
     # Patch filename.s to remove bad sectors in preparation for fix injection.
     # Merlin32 does not allow nested includes and has a propensity to segfault,
     # so we wipe out the main file starting at the bad sectors and include the patch
@@ -96,11 +100,13 @@ def buildfixed(c):
 
 @task
 def mcat(c):
+    """Build and upload a test program to catalog a disk"""
     c.run('merlin32 -V /usr/local/opt/merlin32/lib mcat.s')
     upload_binary_file(c, 'mcat', 'mcat', 0x13fc)
 
 @task
 def mmfix(c):
+    """Build and upload the patched part of the binary for testing"""
     c.run('merlin32 -V /usr/local/opt/merlin32/lib midi.magic.fix.s')
     upload_binary_file(c, 'mmfix', 'midi.magic.fix', 0x13fc)
 

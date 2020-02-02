@@ -35,11 +35,20 @@ YSAV        equ $09
 DISKNAME    equ $14AC
 FILETBL     equ $14CC
 
+;; debugging -- print track, sector in A,Y
+PRTRKSEC MAC
+        jsr PRBYTE      ; A=track
+        tya
+        jsr PRBYTE      ; Y=sector
+        jsr CROUT
+        <<<
+
+
         org $13FC
 
 * Read VTOC sector.
 START
-        jsr CROUT
+        ;; jsr CROUT
         lda #$11
         ldy #$00
         jsr READSECT
@@ -82,13 +91,15 @@ READCAT
         beq :end                ; available entry -- end of catalog
         bmi :nxtfile            ; deleted file, ignore
 
-        lda FD_NAME,x           ; check first char
-        cmp #"^"
-        bne :nxtfile
-        inx
-
         lda #29
         sta FNCNT
+
+        lda FD_NAME,x           ; check first char
+        inx
+        cmp #"@"
+        beq :atfile
+        cmp #"^"
+        bne :nxtfile
 
 :nxtchr lda FD_NAME,x           ; BUFPTR + CAT_FDIDX + (35*N) + 3
         sta FILETBL,y
@@ -109,20 +120,39 @@ READCAT
         beq READCAT             ; end of sector
         tax
         stx FDIDX
-        jmp :readname
+        jmp :readname           ; bne might work
 :end    jmp REENTRY             ; instead of RTS to safely BRUN
+
+* Handle @ file. Similar to nxtchr but reimplement due to fixed address.
+
+:atfile 
+        sty YSAV
+        ldy #0
+:nxtat
+        lda FD_NAME,x           ; BUFPTR + CAT_FDIDX + (35*N) + 3
+        sta DISKNAME,y
+        inx
+        iny
+        dec FNCNT
+        bne :nxtat
+
+        lda #$8D
+        sta DISKNAME,y
+        ldy YSAV
+        jmp :nxtfile            ; always
 
 * Use standard DOS IOB which is already set up to
 * refer to the current slot and drive. We only need
 * to set track, sector, buffer and command (read).
 * Volume is also set to 0 (any) because I've seen the
 * default be FF (invalid).
-* Input: A=trk, Y=sector  Output: A = err (valid if carry set)
+* Input: A=trk, Y=sector  Output: A = err (valid if carry set), Y=?
 READSECT
-        jsr PRTRKSEC       ; debugging
-
         sta IOB_TRACK
         sty IOB_SECTOR
+
+        PRTRKSEC
+
         lda #$00           ; any volume
         sta IOB_VOL
         lda #<BUFPTR
@@ -137,15 +167,4 @@ READSECT
         lda #$00            ; zero RWTS scratch byte to avoid trashing P flag
         sta $48             ; via monitor... only needed when debugging
         lda IOB_ERR
-        rts
-
-PRTRKSEC
-        pha
-        jsr PRBYTE      ; A=track
-        lda #" "
-        jsr COUT
-        tya
-        jsr PRBYTE      ; Y=sector
-        jsr CROUT
-        pla
         rts

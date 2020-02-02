@@ -40,7 +40,7 @@ START     LDA #$00
           ASC 84
           ASC "BLOAD LOGO,A$2000"8D00
           LDA TXTCLR
-          JSR INITnDIE
+          JSR INITCAT
           JSR OUTSTR
           ASC "STANDBY...!"00
           STA KBDSTROBE
@@ -485,7 +485,7 @@ NEXTSONGP CMP SONGCNT
           JMP MAINLOOP
 
 NEXTSONG  STA CURSONG
-          JSR INITnDIE
+          JSR INITCAT
           JSR LOADFILE
           JSR SETUP
 CLEARROLL LDY #$31       ; HPLOT 70,49 TO
@@ -611,23 +611,23 @@ DRAWROLL  PHA            ; main entry point
           LDA MASKIDX,X  ; index into PIXMASK
           TAX
           BIT $0A        ; #00 or #FF
-          BMI :off       ; colors below might be flipped
-          LDA PIXMASK,X  ; OR in 2 mask bytes
+          BMI :on        ; -
+          LDA PIXMASKOFF,X ; OR in 2 mask bytes
           ORA ($06),Y    ; per note; each note
           STA ($06),Y    ; is 2 pixels wide
           INX            ; (white) so 2 bytes
-          LDA PIXMASK,X  ; hold 7 notes
+          LDA PIXMASKOFF,X ; hold 7 notes
           INY            ; (14 pixel bits)
           ORA ($06),Y
           STA ($06),Y
           CLC
           BCC DRAWEND    ; always
           DB $00
-:off      LDA PIXMASK2,X
-          AND ($06),Y    ; turn note off
+:on       LDA PIXMASKON,X
+          AND ($06),Y    ; turn note on (black)
           STA ($06),Y    ; as above, using
           INX            ; AND mask
-          LDA PIXMASK2,X
+          LDA PIXMASKON,X
           INY
           AND ($06),Y
           STA ($06),Y
@@ -666,20 +666,20 @@ SCROLLROLL LDY #$5A      ; Scroll the area
           BCS :2
           RTS
 
-PIXMASK   DW $0003       ; mask ORed into
-PIXMASK+2 DW $000C       ; 2 adjacent bytes
-PIXMASK+4 DW $0030       ; 1 DW per note
-PIXMASK+6 DW $0140       ; 2 white pixels
-PIXMASK+8 DW $0600       ; per note
-PIXMASK+$A DW $1800
-PIXMASK+$C DW $6000
-PIXMASK2  DW $7F7C       ; mask ANDed to
-PIXMASK2+2 DW $7F73      ; turn off notes
-PIXMASK2+4 DW $7F4F
-PIXMASK2+6 DW $7E3F      ; this is just
-PIXMASK2+8 DW $797F      ; PIXMASK EOR #$7F
-PIXMASK2+$A DW $677F
-PIXMASK2+$C DW $1F7F
+PIXMASKOFF DW $0003      ; mask ORed into
+          DW $000C       ; 2 adjacent bytes
+          DW $0030       ; 1 DW per note
+          DW $0140       ; 2 white pixels
+          DW $0600       ; per note
+          DW $1800
+          DW $6000
+PIXMASKON DW $7F7C       ; mask ANDed to
+          DW $7F73       ; turn on notes
+          DW $7F4F
+          DW $7E3F       ; this is just
+          DW $797F       ; PIXMASK EOR #$7F
+          DW $677F
+          DW $1F7F
 MASKIDX   DB $00         ; Index into PIXMASK
           DB $02         ; based on note num
           DB $04
@@ -1264,122 +1264,10 @@ HGRHI+$BF DB $1F
           INY
           BNE $13D3
           JSR PRESSANYKEY
-INITnDIE  LDA #$00
+INITCAT   LDA #$00
           STA $05
           STA $06
-          BRK $00        ; BAD SECTORS TO END
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
+BADSECT   DS $B0         ; BAD SECTORS TO END
 DISKNAME  DS $20         ; 14AC-15CC ZEROED AT STARTUP
-FILETBL   DS $100        ; MAYBE 32 BYTE ENTRIES
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
-          BRK $00
+FILETBL   DS $100        ; 8x 32 byte entries
+          DS $34         ; unused space

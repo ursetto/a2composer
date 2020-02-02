@@ -135,7 +135,7 @@ LAB +$017D, SETUP2         # 0002
 LAB +$08D7, DRAWNOTE         # 0001
 LAB +$08E2, DRAWROLL         # 0001
 LAB +$0924, DRAWEND         # 0001
-LAB +$0914, :off         # 0003
+LAB +$0914, :on         # 0003
 LAB +$0954, :1         # 0002
 LAB +$0939, :2         # 0002
 LAB +$062B, CLEARROLL         # 0002
@@ -272,7 +272,7 @@ COM +$0966, 2 adjacent bytes
 COM +$0968, 1 DW per note
 COM +$096A, 2 white pixels
 COM +$096C, per note
-COM +$0917, turn note off
+COM +$0917, turn note on (black)
 COM +$0908, hold 7 notes
 COM +$090B, (14 pixel bits)
 COM +$0919, as above, using
@@ -294,7 +294,7 @@ COM +$0202, DRAWROLL white pxl
 COM +$0243, decreases tempo val
 COM +$034E, stop song on ESC
 COM +$034A, ESC
-COM +$08FE, colors below might be flipped
+COM +$08FE, -
 COM +$0344, critical SSC section
 COM +$036E, 127 times
 COM +$02E9, preserves A,X,Y

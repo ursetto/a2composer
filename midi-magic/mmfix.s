@@ -3,8 +3,6 @@
 
 * Note: clear $48 after RWTS call to avoid corrupting P flag and setting decimal mode,
 *       which will break everything (even ROM calls), when debugging with monitor.
-* Note: If calling via BRUN, use JMP REENTRY instead of RTS to return, as any use of COUT
-*       in BRUN code will break the capability to RTS thru DOS.
 
 BUFPTR      equ $9600         ; buffer 3, typically unused
 IOB         equ $B7E8
@@ -32,6 +30,10 @@ COUT        equ $FDED
 TRK         equ $05           ; track to read in READSECT
 SECT        equ $06           ; sector to read in READSECT
 FDIDX       equ $07           ; index to current file descriptive entry
+FNCNT       equ $08           ; chars processed in current filename
+YSAV        equ $09
+DISKNAME    equ $14AC
+FILETBL     equ $14CC
 
         org $13FC
 
@@ -43,41 +45,67 @@ START
         lda #$00
         sta SECT
         jsr READSECT
+        ldy #0             ; init FILETBL index
         bcc READCAT
         brk
 READCAT
+        sty YSAV           ; save FILETBL index thru READSECT -- use zp as READSECT returns err in A
         lda CAT_TRACK      ; track/sector at same offset in VTOC and CAT
         beq :end
         ldy CAT_SECTOR
         sta TRK            ; don't really need this indirection
         sty SECT           ; but it's useful for debugging
         jsr READSECT
+        ldy YSAV
         bcc :readfiles
         brk
 
-* Note: DOS CATALOG exits if it encounters a filename descriptor
-* entry with track == 0.  The catalog is initialized to
-* 15 empty blocks all linked together, and deleted files are
-* flagged with $FF (not zeroed), so traversing the whole
-* catalog is wasteful.
+* Like DOS, exit when an entry with track == 0 is encountered.
+* Deleted files are flagged (not zeroed) so there will never be a hole.
+* At INIT time a linked list of 15 empty blocks is generated;
+* reading null entries is slow and unnecessary.
+
+* X is index into file buffer (file descriptive entry or FDE) and
+* Y is index into filename table. FDE and filename are different lengths
+* so we use two indices. The number of filename chars copied is kept
+* in a temp var as both indices are in use.
+* (File buffer is fixed address so we can use Absolute,X. We could use
+* Indirect,Y for both at the cost of extra bookkeeping.)
 
 :readfiles
         ldx #CAT_FDIDX
         stx FDIDX
+
+* On entry, X is the first byte of the current FDE n, i.e. $0B + (35 * n).
+* Y is first byte of filename entry (32 * fn).
+* Terminate when X=0 (end of this file buffer). Treat FILETBL as a ring
+* buffer, wrapping around after 8 ^ files, as @ file may occur afterward.
+
 :readname
-        lda FD_TRACK,x
+        lda FD_TRACK,x          ; BUFPTR + CAT_FDIDX + (35*N)
         beq :end                ; available entry -- end of catalog
         bmi :nxtfile            ; deleted file, ignore
-        ldy #30
-        lda #" "
-        jsr COUT
-        jsr COUT
-:nxtchr lda FD_NAME,x           ; indexed from start of struct
-        jsr COUT
+
+        lda FD_NAME,x           ; check first char
+        cmp #"^"
+        bne :nxtfile
         inx
-        dey
+
+        lda #29
+        sta FNCNT
+
+:nxtchr lda FD_NAME,x           ; BUFPTR + CAT_FDIDX + (35*N) + 3
+        sta FILETBL,y
+        inx
+        iny
+        dec FNCNT
         bne :nxtchr
-        jsr CROUT
+
+        lda #$8D
+        sta FILETBL,y
+        iny
+        iny                     ; wrap to y=0 is ok
+        iny
 :nxtfile 
         clc
         lda FDIDX

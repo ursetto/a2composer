@@ -26,9 +26,7 @@ COUT        equ $FDED
 
 * Warning: Although Wagner's Assembly Lines says file buffer 3 is
 * typically unused, IOB_BUFR is actually $9600 at DOS boot time, 
-* implying it is in use.
-TRK         equ $05           ; track to read in READSECT
-SECT        equ $06           ; sector to read in READSECT
+* implying it may be in use.
 FDIDX       equ $07           ; index to current file descriptive entry
 FNCNT       equ $08           ; chars processed in current filename
 YSAV        equ $09

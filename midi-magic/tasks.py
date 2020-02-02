@@ -11,6 +11,7 @@ disk = "../../../System 6_0_4 jim.hdv"
 prefix = "TFBD/ASM"
 filename = 'midi.magic'
 origbinfile = 'MIDI-MAGIC.BIN'
+newdisk = 'midi magic remix.dsk'
 
 fns = []
 for ext in '.s', '.e.s', '.x.s', '.t', '.t.txt':
@@ -68,18 +69,44 @@ def push(c):
             c.run(qq("./ac", "-pt", disk, dst, fn))
 
 @task
-def build(c):
+def buildorig(c):
+    """Build and verify binary identical to the one on original disk.
+       Use disassembled Merlin source from TFBD. The original is missing 
+       the last 2 sectors."""
     c.run(f'merlin32 -V /usr/local/opt/merlin32/lib {filename}.all.s')
     c.run(f'cmp {filename}.all {origbinfile}')
 
 @task
+def buildfixed(c):
+    """Build and load a patched binary, repairing the corrupt sectors."""
+    # Patch filename.s to remove bad sectors in preparation for fix injection.
+    # Merlin32 does not allow nested includes and has a propensity to segfault,
+    # so we wipe out the main file starting at the bad sectors and include the patch
+    # from the highest level file.
+    print('# Removing bad sectors from main file...')
+    if not c.config.run.dry:
+        with open(f'{filename}.s', 'r') as fin, open(f'{filename}.main.s', 'w') as fout:
+            for line in fin:
+                if line.startswith('INITCAT'): 
+                    break
+                print(line, file=fout, end='')
+
+    c.run(f'merlin32 -V /usr/local/opt/merlin32/lib {filename}.remix.s')
+    upload_binary_file(c, 'midi-magic remix', f'{filename}.remix', 0x800)
+
+@task
 def mcat(c):
     c.run('merlin32 -V /usr/local/opt/merlin32/lib mcat.s')
-    c.run('applecommander -d "midi magic remix.dsk" mcat')                  # kinda dumb -- ignore errors
-    c.run('./ac -p "midi magic remix.dsk" mcat B 0x13fc < mcat')
+    upload_binary_file(c, 'mcat', 'mcat', 0x13fc)
 
 @task
 def mmfix(c):
-    c.run('merlin32 -V /usr/local/opt/merlin32/lib mmfix.s')
-    c.run('applecommander -d "midi magic remix.dsk" mmfix')                  # kinda dumb -- ignore errors
-    c.run('./ac -p "midi magic remix.dsk" mmfix B 0x13fc < mmfix')
+    c.run('merlin32 -V /usr/local/opt/merlin32/lib midi.magic.fix.s')
+    upload_binary_file(c, 'mmfix', 'midi.magic.fix', 0x13fc)
+
+def upload_binary_file(c, dest, src, address, disk=newdisk):
+    disk = q(disk)
+    dest = q(dest)
+    src = q(src)
+    c.run(f'applecommander -d {disk} {dest}')                  # kinda dumb -- ignore errors
+    c.run(f'./ac -p {disk} {dest} B 0x{address:x} < {src}')

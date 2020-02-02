@@ -3,8 +3,8 @@
 
 * Note: clear $48 after RWTS call to avoid corrupting P flag and setting decimal mode,
 *       which will break everything (even ROM calls), when debugging with monitor.
-
 * Note: this ungracefully executes a BRK on disk error.
+* Note: can be built standalone for testing.
 
 * Debugging output (track/sector read info) will appear on loading screen
 * because the entire catalog is reread when loading every file (MIDI-MAGIC $0E22). 
@@ -32,30 +32,24 @@ FD_NAME     equ BUFPTR + 3    ; immediate index into FILEDESC
 RWTS        equ $03D9         ; or direct to $B7B5
 REENTRY     equ $03D0
 PRBYTE      equ $FDDA
-CROUT       equ $FD8E
-COUT        equ $FDED
 
 FDIDX       equ $07           ; index to current file descriptive entry
 FNCNT       equ $08           ; chars processed in current filename
 YSAV        equ $09
-DISKNAME    equ $14AC
-FILETBL     equ $14CC
 
-;; debugging -- print track, sector in A,Y
 PRTRKSEC MAC
         DO DEBUG
         jsr PRBYTE      ; A=track
         tya
         jsr PRBYTE      ; Y=sector
-        jsr CROUT
+        jsr $FD8E       ; CROUT -- avoid dup equate
         FIN
         <<<
 
-        org $13FC
+        org $13FA
 
 INITCAT
 * Read VTOC sector.
-        ;; jsr CROUT
         lda #$11
         ldy #$00
         jsr READSECT
@@ -175,3 +169,12 @@ READSECT
         sta $48             ; via monitor... only needed when debugging
         lda IOB_ERR
         rts
+
+* Fill remaining space until DISKNAME at $14AC. If we overran available space,
+* Merlin32 will SIGBUS (lol).
+
+        ds $14AC - *
+
+DISKNAME  DS $20         ; 14AC-15CC ZEROED AT STARTUP
+FILETBL   DS $100        ; 8x 32 byte entries
+          DS $34         ; unused space

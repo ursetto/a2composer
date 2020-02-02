@@ -41,9 +41,7 @@ FILETBL     equ $14CC
 START
         jsr CROUT
         lda #$11
-        sta TRK
-        lda #$00
-        sta SECT
+        ldy #$00
         jsr READSECT
         ldy #0             ; init FILETBL index
         bcc READCAT
@@ -53,8 +51,6 @@ READCAT
         lda CAT_TRACK      ; track/sector at same offset in VTOC and CAT
         beq :end
         ldy CAT_SECTOR
-        sta TRK            ; don't really need this indirection
-        sty SECT           ; but it's useful for debugging
         jsr READSECT
         ldy YSAV
         bcc :readfiles
@@ -121,14 +117,12 @@ READCAT
 * to set track, sector, buffer and command (read).
 * Volume is also set to 0 (any) because I've seen the
 * default be FF (invalid).
-* Input: TRK, SECT  Output: A = err (if carry set).
+* Input: A=trk, Y=sector  Output: A = err (valid if carry set)
 READSECT
         jsr PRTRKSEC       ; debugging
 
-        lda TRK
         sta IOB_TRACK
-        lda SECT
-        sta IOB_SECTOR
+        sty IOB_SECTOR
         lda #$00           ; any volume
         sta IOB_VOL
         lda #<BUFPTR
@@ -142,16 +136,16 @@ READSECT
         jsr RWTS
         lda #$00            ; zero RWTS scratch byte to avoid trashing P flag
         sta $48             ; via monitor... only needed when debugging
-        bcc :end
         lda IOB_ERR
-:end    rts
+        rts
 
 PRTRKSEC
-        lda TRK
-        jsr PRBYTE
+        pha
+        jsr PRBYTE      ; A=track
         lda #" "
         jsr COUT
-        lda SECT
-        jsr PRBYTE
+        tya
+        jsr PRBYTE      ; Y=sector
         jsr CROUT
+        pla
         rts

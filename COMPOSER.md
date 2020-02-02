@@ -12,15 +12,20 @@ playing a song would have been far too complex for me, and the valid note range
 too hard to determine accurately. So, I suspect they provided a bit of documentation
 for hackers.
 
-The original disk is somewhat corrupt; the full extent is unknown but the MIDI-MAGIC driver
-does not run and some of the COMPOSER versions do not load or have problems during extraction.
-This could extend to the music files themselves but that is impossible to test.
-Fortunately a full copy of COMPOSER is available on the backup disk /DOUBLEDOS.
+The original disk is somewhat corrupt; some of the COMPOSER versions have issues.
+Also, the MIDI-MAGIC program contains bad sectors at the end and crashes on run.
 
-The intent of this project is to recover as much data as possible, decode the file formats,
-and convert them to MIDI files.
+The intent of this project is to recover as much data as possible, decode the
+file formats, and convert them to MIDI files. A secondary goal is to
+disassemble and understand MIDI-MAGIC enough to patch it to run again --
+although we can't test it with real MIDI hardware, we can verify the tempo of
+our MIDI files are correct and preserve something (in essence) that seems
+unpreserved.
 
-A MIDI converter has been implemented in [qrs2midi.py](qrs2midi.py).
+I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py).
+Additionally, I've written a patch for MIDI-MAGIC in [midi-magic/](midi-magic) 
+to reimplement the missing disk functionality and get the piano roll
+program fully working.
 
 Files
 -----
@@ -32,8 +37,7 @@ Files
     COMPOSER6.BAS -- Relocates to $4000, expects files at $5000, data at $503F ($99b,$997 = $503F). Note default data location in driver is $403F (not $4040). If filename does NOT begin with "^^", playback starts at $5000. Saves with header. Note parsing looks buggy due to use of MID$: octave will always be 0 for sharps. Tempo is at $4038 instead of $5038, which is a bug and explains why the header REMs have a control character at file offset $37 -- BASIC area is corrupted at runtime.
     MIDI-MAGIC.BIN -- serial port midi driver and piano roll file player. Crashes on BRUN.
 
-DO YOU THINK I'M SEXY -- file looks corrupt at offset $20FC, modifying this to FF FF should allow it
-to play up to that point.
+DO YOU THINK I'M SEXY -- file looks corrupt at offset $20FC; modifying this to FF FF should allow it to play up to that point.
 
 Recovery
 --------
@@ -41,8 +45,8 @@ Recovery
 - COMPOSER6.BAS was recovered from /DOUBLEDOS, but was a slightly earlier (non-working) version.
   We recovered it by repairing the file length and setting last line pointer to NULL. See Notes below.
 - COMPOSER3 and COMPOSER4 were also recovered by repairing the files. Note that COMPOSER4 contains what looks like self-repairing code to fix this at runtime!
-- MIDI-MAGIC has bad sectors ($00 bytes) from $0BFE - $0DFF, in the middle of code. Much is actually zeroed data space, so under $100 bytes of code were lost, which obtain the song list from disk.
-- MIDIMAGIC (from /DOUBLEDOS), is identical to MIDI-MAGIC until $0A00 (and truncated there).
+- MIDI-MAGIC has bad sectors ($00 bytes) from $0BFE - $0DFF, in the middle of code. Much is actually zeroed data space, so only $B0 bytes of code were lost, which obtain the song list and disk name from disk.
+- MIDIMAGIC (from /DOUBLEDOS) is identical to MIDI-MAGIC until $0A00 (and truncated there) and so is not useful for recovery.
 
 Files in this repository
 ------------------------

@@ -108,7 +108,7 @@ def mcat(c):
 def mmfix(c):
     """Build and upload the patched part of the binary for testing"""
     c.run('merlin32 -V /usr/local/opt/merlin32/lib midi.magic.fix.s')
-    upload_binary_file(c, 'mmfix', 'midi.magic.fix', 0x13fc)
+    upload_binary_file(c, 'mmfix', 'midi.magic.fix', 0x13f6)
 
 def upload_binary_file(c, dest, src, address, disk=newdisk):
     disk = q(disk)

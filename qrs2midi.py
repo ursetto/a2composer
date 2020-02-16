@@ -5,6 +5,7 @@ from __future__ import print_function
 from pprint import pprint as pp
 import argparse
 import sys
+import os
 
 
 def decode_file_to_bytes(f):
@@ -91,19 +92,27 @@ def main():
     ap.add_argument('filename')
     ap.add_argument('--offset', type=int, default=0x40)
     ap.add_argument('--tempo', type=int)    # no default here
+    ap.add_argument('-v', '--verbose', action='store_true')
     args = ap.parse_args()
+
+    basename = os.path.basename(args.filename)
 
     tempo = 94
     if args.tempo:
         tempo = args.tempo
-    elif args.filename[0] == '^':
-        tempo = ord(args.filename[1])
+    elif basename[0] == '^':
+        tempo = ord(basename[1])
 
     with open(args.filename, "rb") as f:
-        print("Transcoding to " + args.filename + ".mid, tempo " + str(tempo), file=sys.stderr)
+        filename_out = os.path.splitext(basename)[0]
+        filename_out += '.mid'
+        if filename_out[0] == '^':
+            filename_out = filename_out[3:]
+        print("Transcoding to " + filename_out + ", tempo " + str(tempo), file=sys.stderr)
         ir = decode_qrs_to_ir(f, args.offset)
-        # pp(ir)
-        encode_ir_to_midi(ir, args.filename + '.mid', tempo)
+        if args.verbose:
+            pp(ir)
+        encode_ir_to_midi(ir, filename_out, tempo)
 
 if __name__ == '__main__':
     main()

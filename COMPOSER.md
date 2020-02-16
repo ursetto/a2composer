@@ -22,39 +22,48 @@ although we can't test it with real MIDI hardware, we can verify the tempo of
 our MIDI files are correct and preserve something (in essence) that seems
 unpreserved.
 
-I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py).
+I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py). Piano roll files in `roll/`
+have been converted to `.mid` files in `midi/`.
+
 Additionally, I've written a patch for MIDI-MAGIC in [midi-magic/](midi-magic) 
 to reimplement the missing disk functionality and get the piano roll
-program fully working.
+program fully working. Fully annotated source is available there.
 
-Files
------
+I used The Flaming Bird Disassembler to diassassemble and annotate the source.
+The program `tfbd.py` decodes its binary template files (containing comments, labels,
+etc.) and generates text output, which is stored in version control.
 
-    COMPOSER2.BAS -- Expects loaded files at $4000; BSAVEs without header (at $4040). Music data starts with FF 0A. Accepts notes like C0, A#3, B5. Stops notes by numeric value.
-    COMPOSER3.BAS -- Relocates to $3000. Loads and saves files without header at $5000. Music data starts with FF 0A 00. Sets $99b to $50 and $997 to $00 (to tell driver where data is). Adds hidden Adjust Tempo option (8). Stops notes by name.
-    COMPOSER4.BAS -- Sets $4FBD..4FBF to 0. This corresponds exactly in location to this file's 00 00 00 end of BASIC file signature (!!) -- perhaps a workaround for the end of file corruption plaguing these programs. Removed in COMPOSER6.
-    COMPOSER5.BAS -- lost
-    COMPOSER6.BAS -- Relocates to $4000, expects files at $5000, data at $503F ($99b,$997 = $503F). Note default data location in driver is $403F (not $4040). If filename does NOT begin with "^^", playback starts at $5000. Saves with header. Note parsing looks buggy due to use of MID$: octave will always be 0 for sharps. Tempo is at $4038 instead of $5038, which is a bug and explains why the header REMs have a control character at file offset $37 -- BASIC area is corrupted at runtime.
-    MIDI-MAGIC.BIN -- serial port midi driver and piano roll file player. Crashes on BRUN.
+Files in this repository
+------------------------
 
-DO YOU THINK I'M SEXY -- file looks corrupt at offset $20FC; modifying this to FF FF should allow it to play up to that point.
+- `COMPOSER.BAS`: Latest version of COMPOSER. Old versions [2-6] are in unique commits.
+- `qrs2midi.py`: Translate piano roll files to MIDI.
+   - Use `init.sh` and `source venv/bin/activate` to configure your environment to run it.
+- `midi-magic/`: Disassembly and repair of MIDI-MAGIC driver.
+- `midi magic demo.dsk`: Original, corrupt disk.
+- `midi magic remix.dsk`: Repaired and cleaned up disk. Conserved, not preserved.
+- `roll/`: Original piano roll files.
+- `midi/`: Piano roll files converted to MIDI.
+
+Files on original disk
+----------------------
+
+- COMPOSER2.BAS -- Expects loaded files at $4000; BSAVEs without header (at $4040). Music data starts with FF 0A. Accepts notes like C0, A#3, B5. Stops notes by numeric value.
+- COMPOSER3.BAS -- Relocates to $3000. Loads and saves files without header at $5000. Music data starts with FF 0A 00. Sets $99b to $50 and $997 to $00 (to tell driver where data is). Adds hidden Adjust Tempo option (8). Stops notes by name.
+- COMPOSER4.BAS -- Sets $4FBD..4FBF to 0. This corresponds exactly in location to this file's 00 00 00 end of BASIC file signature (!!) -- perhaps a workaround for the end of file corruption plaguing these programs. Removed in COMPOSER6.
+- COMPOSER5.BAS -- lost
+- COMPOSER6.BAS -- Relocates to $4000, expects files at $5000, data at $503F ($99b,$997 = $503F). Note default data location in driver is $403F (not $4040). If filename does NOT begin with "^^", playback starts at $5000. Saves with header. Note parsing looks buggy due to use of MID$: octave will always be 0 for sharps. Tempo is at $4038 instead of $5038, which is a bug and explains why the header REMs have a control character at file offset $37 -- BASIC area is corrupted at runtime.
+- MIDI-MAGIC.BIN -- serial port midi driver and piano roll file player. Crashes on BRUN.
+- DO YOU THINK I'M SEXY -- file looks corrupt at offset $20FC; modifying this to FF FF should allow it to play up to that point.
 
 Recovery
 --------
 
 - COMPOSER6.BAS was recovered from /DOUBLEDOS, but was a slightly earlier (non-working) version.
-  We recovered it by repairing the file length and setting last line pointer to NULL. See Notes below.
-- COMPOSER3 and COMPOSER4 were also recovered by repairing the files. Note that COMPOSER4 contains what looks like self-repairing code to fix this at runtime!
+  We recovered it from the corrupt disk by repairing the file length and setting last line pointer to NULL. See Notes below.
+- COMPOSER3 and COMPOSER4 were also recovered by repairing the files. Note that COMPOSER4 contains what looks like self-repairing code to fix this at runtime! I almost understood the problem.
 - MIDI-MAGIC has bad sectors ($00 bytes) from $0BFE - $0DFF, in the middle of code. Much is actually zeroed data space, so only $B0 bytes of code were lost, which obtain the song list and disk name from disk.
 - MIDIMAGIC (from /DOUBLEDOS) is identical to MIDI-MAGIC until $0A00 (and truncated there) and so is not useful for recovery.
-
-Files in this repository
-------------------------
-
-- `COMPOSER2.BAS`: Version 2 of COMPOSER.
-- `COMPOSER6.BAS`: Version 6 (latest) of COMPOSER.
-- `qrs2midi.py`: Translate piano roll files to MIDI.
-- `midi-magic/`: Disassembly of MIDI-MAGIC driver.
 
 Entry points
 ------------

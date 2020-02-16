@@ -1,9 +1,9 @@
 COMPOSER and qrs2midi
 ========
 
-COMPOSER is a dead simple composition program
-I wrote as a teenager that generates files compatible with the MIDI MAGIC piano roll
-driver, found on the QRS MIDI-MAGIC demo disk for the Apple //.  It can also call into the MIDI-MAGIC driver to play files from
+COMPOSER is a simple composition program I wrote for the Apple //
+around 1990. It generates files compatible with the MIDI MAGIC piano roll
+driver, which came with the QRS MIDI-MAGIC demo disk and was bundled with a hardware MIDI interface.  COMPOSER can also call into the MIDI-MAGIC driver to play files from
 BASIC while editing.
 
 <img src="composer.png"/>
@@ -12,8 +12,7 @@ It's possible I reverse-engineered the file format given that this was
 just a demo disk, that there are multiple iterations of my data files at
 different load addresses with and without headers, and that I was
 generally pretty desperate. However the tempo variable and the entry points for
-playing a song would have been far too complex for me, and the valid note range
-too hard to determine accurately. So, I suspect they provided a bit of documentation
+playing a song would have been far too complex for me. So, I suspect they provided a bit of documentation
 for hackers.
 
 The original disk is somewhat corrupt; some of the COMPOSER versions have issues.
@@ -28,12 +27,12 @@ unpreserved. In the end both goals were accomplished.
 
 <img src="midi-magic-select.png" />
 
-I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py). Piano roll files in `roll/`
-have been converted to `.mid` files in `midi/`. You can start the piano roll in an emulator while you play the midi file, and it lines up decently enough.
+First, I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py). Piano roll files in `roll/`
+have been converted to `.mid` files in `midi/`. If you start the piano roll in an emulator while you play the midi file, it lines up pretty decently.
 
-Additionally, I've written a patch for MIDI-MAGIC in [midi-magic/](midi-magic)
+Additionally, I've written a patch for the driver in [midi-magic/](midi-magic)
 to reimplement the missing disk functionality and get the piano roll
-program fully working. Fully annotated source is available there. The piano roll background (from file `LOGO`) is unfortunately still corrupt.
+program fully working. Fully annotated source is available there. The static piano roll background is unfortunately still corrupt.
 
 <img src="midi-magic-roll.png"/>
 

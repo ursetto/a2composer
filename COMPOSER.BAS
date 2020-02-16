@@ -1,10 +1,10 @@
 10  REM  ***************************
-20  REM  *        COMPOSHR         *
+20  REM  *        COMPOSER         *
 30  REM  *     BY JIM URSETTO      *
 40  REM  ***************************
 70  IF  PEEK(104) = 64  THEN 96
 80  POKE 104,64: POKE 16384,0
-95  PRINT  CHR$(4);"RUN COMPOSER6"
+95  PRINT  CHR$(4);"RUN COMPOSER"
 96  PRINT  CHR$(4);"BLOAD MIDI-MAGIC"
 97  POKE 2459,80: POKE 2455,63
 98 TEMPO = 16440

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Requires python-midi and Python 2.7. This script works with Python 3, but python-midi needs 2.7.
+
 from __future__ import print_function
 
 from pprint import pprint as pp

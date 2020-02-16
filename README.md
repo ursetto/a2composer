@@ -1,13 +1,17 @@
-COMPOSER
+COMPOSER and qrs2midi
 ========
 
-Found on the QRS MIDI-MAGIC demo disk, COMPOSER is a simple composition program
-I wrote that generates files compatible with the MIDI MAGIC piano roll
-interface. It can also call into the MIDI-MAGIC driver to play files from
-BASIC.  It's possible I reverse-engineered the file format given that this was 
-just a demo disk, that there are multiple iterations of my data files at 
+COMPOSER is a dead simple composition program
+I wrote as a teenager that generates files compatible with the MIDI MAGIC piano roll
+driver, found on the QRS MIDI-MAGIC demo disk for the Apple //.  It can also call into the MIDI-MAGIC driver to play files from
+BASIC while editing.
+
+<img src="composer.png"/>
+
+It's possible I reverse-engineered the file format given that this was
+just a demo disk, that there are multiple iterations of my data files at
 different load addresses with and without headers, and that I was
-generally pretty desperate. However the tempo variable and the entry points for 
+generally pretty desperate. However the tempo variable and the entry points for
 playing a song would have been far too complex for me, and the valid note range
 too hard to determine accurately. So, I suspect they provided a bit of documentation
 for hackers.
@@ -20,18 +24,24 @@ file formats, and convert them to MIDI files. A secondary goal is to
 disassemble and understand MIDI-MAGIC enough to patch it to run again --
 although we can't test it with real MIDI hardware, we can verify the tempo of
 our MIDI files are correct and preserve something (in essence) that seems
-unpreserved.
+unpreserved. In the end both goals were accomplished.
+
+<img src="midi-magic-select.png" />
 
 I've implemented a MIDI converter in [qrs2midi.py](qrs2midi.py). Piano roll files in `roll/`
-have been converted to `.mid` files in `midi/`.
+have been converted to `.mid` files in `midi/`. You can start the piano roll in an emulator while you play the midi file, and it lines up decently enough.
 
-Additionally, I've written a patch for MIDI-MAGIC in [midi-magic/](midi-magic) 
+Additionally, I've written a patch for MIDI-MAGIC in [midi-magic/](midi-magic)
 to reimplement the missing disk functionality and get the piano roll
-program fully working. Fully annotated source is available there.
+program fully working. Fully annotated source is available there. The piano roll background (from file `LOGO`) is unfortunately still corrupt.
+
+<img src="midi-magic-roll.png"/>
+
+A repaired disk is provided as `midi magic remix.dsk`. This contains the original demo files and will run MIDI-MAGIC on startup. If you Ctrl-C while it's starting, you can `RUN COMPOSER`. I also included a couple files written with COMPOSER, marked with (WIP), that are basically just a few measures of music I laboriously entered before giving up.
 
 I used The Flaming Bird Disassembler to diassassemble and annotate the source.
 The program `tfbd.py` decodes its binary template files (containing comments, labels,
-etc.) and generates text output, which is stored in version control.
+etc.) and generates text output, which is stored in version control. I tried using radare2, but it's just too touchy and doesn't handle 6502 well.
 
 Files in this repository
 ------------------------
@@ -54,7 +64,8 @@ Files on original disk
 - COMPOSER5.BAS -- lost
 - COMPOSER6.BAS -- Relocates to $4000, expects files at $5000, data at $503F ($99b,$997 = $503F). Note default data location in driver is $403F (not $4040). If filename does NOT begin with "^^", playback starts at $5000. Saves with header. Note parsing looks buggy due to use of MID$: octave will always be 0 for sharps. Tempo is at $4038 instead of $5038, which is a bug and explains why the header REMs have a control character at file offset $37 -- BASIC area is corrupted at runtime.
 - MIDI-MAGIC.BIN -- serial port midi driver and piano roll file player. Crashes on BRUN.
-- DO YOU THINK I'M SEXY -- file looks corrupt at offset $20FC; modifying this to FF FF should allow it to play up to that point.
+- A bunch of piano roll files, all starting with `^`.
+- The file starting with `@` is displayed as the disk title.
 
 Recovery
 --------
@@ -77,7 +88,7 @@ can be seen in the disassembly output.
 File format
 -----------
 
-Info files are used only by COMPOSER and are not necessary to decode the music. They are TXT files containing 3 integer values: 
+Info files are used only by COMPOSER and are not necessary to decode the music. They are TXT files containing 3 integer values:
  - NT (number of notes entered, excluding rests and note off); completely unused, even for display.
  - NC (byte index of next note)
  - TM (tempo).
@@ -88,7 +99,7 @@ The header on the demo files consists of 64 zero bytes ($4000 - $403F in memory)
 
 We know tempo is stored at runtime at $4038 (but is zero in the file). No other
 locations in this header are used, even for temporary storage. A few
-of my files were saved with some data from $5000-$503F; probably 
+of my files were saved with some data from $5000-$503F; probably
 BASIC file data that overlapped the music file during a period
 where the BASIC program was improperly relocated.
 
@@ -113,7 +124,7 @@ Note on is a single byte; NOTENUM.  Note off is a single byte with the high bit 
 
 A REST (really, a time step) is generated with the pair (FF, DURATION) where DURATION is (arbitrarily?) 20x the number entered as input. Empirically, step values are much higher in COMPOSER than in the official files (often we see steps of 1 or 2, whereas my durations are 10x higher). It is possible setting the tempo too high is too taxing or disallows high polyphony, for the same reason high jiffies used to be a problem in Linux.)
 
-Note numbers (NOTENUM) range from 36 to 96 ($24 to $60) in COMPOSER4, or 36 to 107 ($24 to $6b) in COMPOSER6. 
+Note numbers (NOTENUM) range from 36 to 96 ($24 to $60) in COMPOSER4, or 36 to 107 ($24 to $6b) in COMPOSER6.
 Note off for a particular NOTENUM is generated by setting bit 7 in NOTENUM.
 
 End of song is represented by (255, 255).
@@ -145,14 +156,14 @@ LOAD). This is because MIDI-MAGIC resides at $800. That's also why music data
 files were relocated from $4000 to $5000. (Not sure why we didn't relocate
 COMPOSER to $6000 and keep the music files the same; this would have allowed
 playing native QRS music files from within COMPOSER.) Even though the file
-header apparently has a load address of $4001 on disk, BASIC ignores this and 
+header apparently has a load address of $4001 on disk, BASIC ignores this and
 will load it at the current value of $67-$68.
 - In the earliest version, COMPOSER is at $3001. I'm guessing I moved it to $4001
   to avoid accidentally wiping out the program with HGR.
 - COMPOSER6 is $1006 bytes long, and will overlap the start of the music file at $5000!
   If you load a music file, the very end of the BASIC program gets corrupted.
 
-If we had left the music file at $4000, data at $4040 and relocated COMPOSER to $1800, 
+If we had left the music file at $4000, data at $4040 and relocated COMPOSER to $1800,
 we would have plenty of token space and have been able to play official files.
 
 Addresses 174,175 (AF.B0) contain the address + 1 of the last byte of the
@@ -166,14 +177,16 @@ expected 00 0b xx), and AppleSoft may fail to LIST based on what's in $xx0b in
 memory. To fix this, we LOAD the file, increment the 16-bit address in $AF by 1,
 then NULL out the linked list pointer.
 
-    ]LOAD COMPOSER6,D1
-    ]CALL-151
-    *AF.B0
-    00AF: 06
-    00B0: 18
-    *AF: 07
-    *1805: 00 00
-    *SAVE COMPOSER6,D2
+```
+]LOAD COMPOSER6,D1
+]CALL-151
+*AF.B0
+00AF: 06
+00B0: 18
+*AF: 07
+*1805: 00 00
+*SAVE COMPOSER6,D2
+```
 
 COMPOSER4 actually writes 00 00 00 to the end of file location in memory at startup time (the address is hardcoded). Obviously, this bit me at the time, but I didn't know how to properly fix it. I'm guessing the music file clobbered the last pointer at some point, then I saved the program. I don't know how the program length was corrupted though.
 
@@ -186,6 +199,7 @@ commentary. The file `tasks.py` will pull source files from my working disk
 and commit them to git, and `tfbd.py` will decode TFBD template files to text
 for storage in git.
 
+```
 zp $00 : SONGPTR -- points to current byte in song
 zp $04,$05: temp used for HGR line pointer
 zp $06,$07: temp used for HGR line pointer
@@ -210,7 +224,7 @@ $305 : seems to hold the last key pressed, set to 0 when key is handled.
  the catalog code is hardcoded to look 3 bytes past it for the next filename;
  bytes 30 and 31 are ignored.
  For example, ASC "^ PIANO ROLL" A0 A0 ... 8D. Byte 0 (the second char of
- the full filename) is the file's tempo. 
+ the full filename) is the file's tempo.
  Song scan terminates at the first 0 byte (at byte 1), or after 256 bytes.
 
 0305 : might hold last key pressed.
@@ -220,6 +234,7 @@ with '*' or '.' in each column in some way. Initialized to all '.'.
 See $0AB5 (ANIMATE) which oddly has no call to it. I think this
 is vestigial debugging output, perhaps made visible by setting
 mixed text/HGR mode.
+```
 
 Tempo can range from 32 to 159 (a 7-bit range of $7F).
 Right arrow DECREASES tempo, implying "tempo" is actually a delay value.
@@ -254,10 +269,15 @@ track 4 is unreadable. Unfortunately there are no copies of this data elsewhere.
 
 ### Rewriting of MIDI-MAGIC
 
+This was a proof of concept; manually editing the filename tables before
+I created a patch to read it from disk. See the source code for
+the actual solution.
+
+```
   13FC: 60                        ; return from badlands without cataloging disk
-  14AC: A0 A8 C4 C9 D3 CB A0 CE 
+  14AC: A0 A8 C4 C9 D3 CB A0 CE
         C1 CD C5 A9 8D
-  14CC: DE A0 D0 C9 C1 CE CF A0 
+  14CC: DE A0 D0 C9 C1 CE CF A0
         D2 CF CC CC A0 A0 A0 A0
         A0 A0 A0 A0 A0 A0 A0 A0
         A0 A0 A0 A0 A0 8D 00 00   ; ASC "^ PIANO ROLL          "8D
@@ -274,9 +294,7 @@ CATALOG,D1
 833:2C
 836:2C           # avoid zeroing filename structures
 
-(DISK NAME)=@@@@@@@@@@@@@^ PIANO ROLL
-1 ...  PIANO ROLL
-2 ...            8
+```
 
 Further information
 -------------------
@@ -298,4 +316,3 @@ I also found the following at https://homepages.abdn.ac.uk/d.j.benson/pages/html
     MIDI Magic Digital Disks
 
     Digital music disks from the 10,000 song QRS piano roll library of past and present music. Available for Yamaha and the MIDI DJ sequencer as well as Atari ST, Apple IIC, II+, IIE, Laser 128, Commodore 64/128, PC XT and other popular computers and sequencers. Retail $19.95 (6 song disk), $29.95 (10 song disk). (1988 prices).
-

@@ -38,9 +38,11 @@ program fully working. Fully annotated source is available there. The static pia
 
 A repaired disk is provided as `midi magic remix.dsk`. This contains the original demo files and will run MIDI-MAGIC on startup. If you Ctrl-C while it's starting, you can `RUN COMPOSER`. I also included a couple files written with COMPOSER, marked with (WIP), that are basically just a few measures of music I laboriously entered before giving up.
 
-I used The Flaming Bird Disassembler to diassassemble and annotate the source.
+I used The Flaming Bird Disassembler to disassemble and annotate the source.
 The program `tfbd.py` decodes its binary template files (containing comments, labels,
 etc.) and generates text output, which is stored in version control. I tried using radare2, but it's just too touchy and doesn't handle 6502 well.
+
+<img src="midi-magic-tfbd.png">
 
 Files in this repository
 ------------------------

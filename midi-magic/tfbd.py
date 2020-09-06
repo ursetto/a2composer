@@ -97,9 +97,9 @@ def decode_6x(f):
 
         if rtype == 0x66:
             assert count == 1
-            # ARG resembles a IIGS slow ram addr E0/XXXX here. I suspect it
-            # is a pointer to live memory and will be ignored -- it is
-            # randomly updated after a save/load cycle.
+            # ARG is a pointer to a struct in IIGS memory bank $E0 (E0/6000.BFFF and E1/A000.BFFF
+            # are usable via IIGS memory manager). It is written out on save but has no validity 
+            # on load, and can be ignored.
             print(f"COM +${offset:04X}, {var_data}")  # # {arg:08X}")
         elif rtype == 0x61:
             assert count == 1
